@@ -1,0 +1,58 @@
+
+##----------------------------------------------------------------------------
+##                GENERAL FUNCTIONS
+##----------------------------------------------------------------------------
+
+make.global <- function(alist, dest.env='.GlobalEnv') {
+    for (i in 1:length(alist)) {
+        assign(names(alist[i]), alist[[i]], dest.env );
+    }
+}
+
+expit <- function(x) {
+    ex <- exp(x);
+    ex/(1+ex);
+}
+
+get.covmat <- function(StDevCovar, corrCovar) {
+    n.x      <- length(StDevCovar);
+    Vars     <- StDevCovar*StDevCovar;
+    CovarMat <- matrix(NA, n.x, n.x);
+    for (i in 1:n.x) {
+        CovarMat[i,i] <- Vars[i];
+        for (j in i:n.x) {
+            if (j == i) {
+                CovarMat[i,i] <- Vars[i];
+                next;
+            }
+            CovarMat[i, j] <- corrCovar*StDevCovar[i]*StDevCovar[j];
+            CovarMat[j, i] <- CovarMat[i, j];
+        }
+    }
+
+    CovarMat
+}
+
+get.ps <- function(dta, ps.fml = NULL, ps.cov = NULL, grp="group", delta = 0) {
+    ## generate formula
+    if (is.null(ps.fml))
+        ps.fml <- as.formula(paste(grp, "~", paste(ps.cov, collapse="+"), sep=""));
+
+    ## fit model
+    glm.fit   <- glm(ps.fml, family=binomial, data=dta);
+    est.ps    <- glm.fit$fitted;
+
+    ##exponential tilting for z=1 only
+    if (0 != delta) {
+        e.delta        <- exp(delta);
+        est.ps.delta   <- sapply(est.ps, function(x) {x*e.delta/(x*e.delta+1-x)});
+        inx.z1         <- which(1 == dta[, grp]);
+        est.ps[inx.z1] <- est.ps.delta[inx.z1];
+    }
+
+    est.ps
+}
+
+get.xbeta <- function(covX, regCoeff) {
+    apply(covX, 1, function(x) {sum(x * regCoeff)});
+}
