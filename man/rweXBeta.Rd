@@ -2,21 +2,16 @@
 % Please edit documentation in R/rwe_simu.R
 \name{rweXBeta}
 \alias{rweXBeta}
-\title{Simulate X*Beta}
+\title{Simulate X multiplied by Beta}
 \usage{
-rweXBeta(nPat, muCov, sdCov, corCov, regCoeff, cov.x = NULL, fmla = NULL)
+rweXBeta(..., regCoeff, cov.x = NULL, fmla = NULL)
 }
 \arguments{
-\item{nPat}{number of patients}
-
-\item{muCov}{mean vector of covariates}
-
-\item{sdCov}{standard deviation vector of covariates}
-
-\item{corCov}{correlation of covariates}
+\item{...}{Parameters for simulating covariates by function
+\code{\link{rweSimuCov}}}
 
 \item{regCoeff}{regression coefficients}
 }
 \description{
-Simulate X*Beta
+Simulate X multiplied by Beta
 }

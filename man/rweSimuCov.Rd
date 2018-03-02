@@ -2,9 +2,9 @@
 % Please edit documentation in R/rwe_simu.R
 \name{rweSimuCov}
 \alias{rweSimuCov}
-\title{Simulate covariates}
+\title{Simulate covariates following a mixture of multivariate normal distribution}
 \usage{
-rweSimuCov(nPat, muCov, sdCov, corCov)
+rweSimuCov(nPat, muCov, sdCov, corCov, mix.phi = 1, seed = NULL)
 }
 \arguments{
 \item{nPat}{number of patients}
@@ -14,7 +14,9 @@ rweSimuCov(nPat, muCov, sdCov, corCov)
 \item{sdCov}{standard deviation vector of covariates}
 
 \item{corCov}{correlation of covariates}
+
+\item{mix.phi}{weight in mixture model}
 }
 \description{
-Simulate covariates
+Simulate covariates following a mixture of multivariate normal distribution
 }

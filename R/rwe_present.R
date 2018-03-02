@@ -31,12 +31,30 @@ rweExpRst <- function(numbers, template.f,  out.f="rst.txt", sub.str="AA") {
 #'
 #' @export
 #'
-rwePlotUnbalance <- function(data.unb, xlim = NULL, ylim = NULL, title = "", f.grid = formula("V~Study")) {
-    rst <- ggplot(data.unb, aes(x=Diff)) +
-        geom_density(alpha = 0.4, fill = "gray", na.rm = TRUE) +
-        geom_vline(xintercept = 0, linetype="dashed", col = "red") +
-        labs(x = "", y="", title=title) +
-        theme_bw()+
+rwePlotUnbalance <- function(data.unb,
+                             var.x = "Diff",
+                             var.group = NULL,
+                             xlim = NULL,
+                             ylim = NULL,
+                             title = "",
+                             f.grid = formula("V~Study"),
+                             adjust = 1) {
+
+    if (is.null(var.group)) {
+        rst <- ggplot(data.unb, aes_string(x=var.x)) +
+            geom_density(alpha = 0.4, fill = "gray", na.rm = TRUE, adjust = adjust) +
+            geom_vline(xintercept = 0, linetype="dashed", col = "red");
+    } else {
+        rst <- ggplot(data.unb,
+                      aes_string(x=var.x,
+                                 group = var.group,
+                                 color = var.group,
+                                 linetype = var.group)) +
+            geom_density(alpha = 0.2, fill = "gray", na.rm = TRUE, adjust = adjust, );
+    }
+
+    rst <- rst + labs(x = "", y="", title=title) +
+        theme_bw() +
         theme(strip.background = element_blank(),
               panel.grid       = element_blank(),
               panel.border     = element_blank(),
@@ -47,7 +65,7 @@ rwePlotUnbalance <- function(data.unb, xlim = NULL, ylim = NULL, title = "", f.g
         facet_grid(f.grid);
 
     if (!is.null(xlim))
-        rst <- rst + scale_x_continuous(limits = xlim, breaks = c(xlim,0));
+        rst <- rst + scale_x_continuous(limits = xlim, breaks = 0);
     if (!is.null(ylim))
         rst <- rst + scale_y_continuous(limits = ylim);
 

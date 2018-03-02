@@ -1,29 +1,61 @@
-#' Simulate covariates
+#' Simulate covariates following a mixture of multivariate normal distribution
 #'
 #' @inheritParams simupara
 #'
 #' @export
 #'
-rweSimuCov <- function(nPat, muCov, sdCov, corCov) {
-    cov.x <- rmvnorm(nPat,
-                     mean=muCov,
-                     sigma=get.covmat(sdCov, corCov));
+rweSimuCov <- function(nPat, muCov, sdCov, corCov, mix.phi = 1, seed = NULL) {
+
+    f.cur <- function(x, i) {
+        if (is.array(x)) {
+            rst <- x[min(i, nrow(x)),];
+        } else {
+            rst <- x;
+        }
+
+        rst
+    }
+
+    stopifnot(is.numeric(mix.phi) | any(mix.phi < 0));
+    stopifnot(nPat > 0);
+
+    if (!is.null(seed))
+        set.seed(seed);
+
+    n.pts <- rmultinom(1, nPat, mix.phi);
+    cov.x <- NULL;
+    for (i in 1:length(mix.phi)) {
+
+        if (0 == n.pts[i])
+            next;
+
+        cur.mu  <- f.cur(muCov, i);
+        cur.sd  <- f.cur(sdCov, i);
+        cur.cor <- corCov[min(i, length(corCov))];
+        cur.x   <- rmvnorm(n.pts[i],
+                           mean=cur.mu,
+                           sigma=get.covmat(cur.sd, cur.cor));
+        cov.x <- rbind(cov.x, cur.x);
+    }
 
     colnames(cov.x) <- paste("V", 1:ncol(cov.x), sep="");
     data.frame(cov.x);
 }
 
-#' Simulate X*Beta
+#' Simulate X multiplied by Beta
 #'
 #' @inheritParams simupara
+#' @param ... Parameters for simulating covariates by function
+#'     \code{\link{rweSimuCov}}
+#'
 #'
 #' @export
 #'
-rweXBeta <- function(nPat, muCov, sdCov, corCov, regCoeff, cov.x = NULL, fmla = NULL) {
+rweXBeta <- function(..., regCoeff, cov.x = NULL, fmla = NULL) {
     stopifnot(inherits(fmla,"formula") | is.null(fmla));
 
     if (is.null(cov.x))
-        cov.x <- rweSimuCov(nPat, muCov, sdCov, corCov);
+        cov.x <- rweSimuCov(...);
 
     if (is.null(fmla)) {
         ## add intercept
@@ -40,17 +72,19 @@ rweXBeta <- function(nPat, muCov, sdCov, corCov, regCoeff, cov.x = NULL, fmla = 
 #' Compute standard error of the random error
 #'
 #' @inheritParams simupara
+#' @inheritParams rweGetYSig
 #'
-#' @return standard error or the random error term
+#' @return mean of xbeta and standard error or the random error term
 #'
 #' @export
 #'
-rweGetYSig <- function(sig2Ratio, nPat=10000, xbeta = NULL, ...) {
+rweGetYSig <- function(..., nPat=500000, xbeta = NULL, sig2Ratio = 1) {
     if (is.null(xbeta))
         xbeta   <- rweXBeta(nPat=nPat, ...);
     v.xbeta <- var(xbeta);
     ysig    <- sqrt(v.xbeta * sig2Ratio);
-    ysig
+
+    c(mean(xbeta), ysig);
 }
 
 #' Get intercept for a binary outcome.
@@ -59,11 +93,14 @@ rweGetYSig <- function(sig2Ratio, nPat=10000, xbeta = NULL, ...) {
 #'
 #' @inheritParams simupara
 #'
+#' @param ... Parameters for simulating covariates by function
+#'     \code{\link{rweXBeta}} and \code{\link{rweSimuCov}}
+#'
 #' @return standard error or the random error term
 #'
 #' @export
 #'
-rweGetBinInt <- function(bin.mu, nPat=10000, xbeta = NULL, ...) {
+rweGetBinInt <- function(..., nPat=500000, xbeta = NULL, bin.mu = 0.5) {
     if (is.null(xbeta))
         ey <- rweXBeta(nPat, ...);
 
@@ -83,16 +120,19 @@ rweGetBinInt <- function(bin.mu, nPat=10000, xbeta = NULL, ...) {
 #'
 #' @export
 #'
-rweSimuError <- function(nPat, ysig = 1,
-                         type = c("normal", "skewed", "mixture"),
-                         skew.n = NULL, skew.p = NULL, ...) {
-    type <- match.arg(type);
+rweSimuError <- function(nPat,
+                         error.type = c("normal", "skewed"),
+                         ysig   = 1,
+                         skew.n = NULL,skew.p = NULL, skew.noise = 0.0001,
+                         ...) {
+
+    type <- match.arg(error.type);
     rst <- switch(type,
                   normal = {rnorm(nPat, 0, ysig)},
                   skewed = {
         mu        <- skew.n * (1-skew.p) / skew.p;
         va        <- skew.n * (1-skew.p) / skew.p^2;
-        noise.sig <- 0.1;
+        noise.sig <- skew.noise;
         rst       <- rnbinom(nPat, skew.n, skew.p);
         rst       <- rst - mu + rnorm(nPat, 0, noise.sig);
         rst       <- rst/sqrt(va + noise.sig^2)*ysig;
@@ -107,28 +147,36 @@ rweSimuError <- function(nPat, ysig = 1,
 #'
 #' @export
 #'
-rweSimuOneArm <- function(nPat, muCov, sdCov, corCov, regCoeff, fmla = NULL,
-                          type = c("continuous", "binary"),
-                          ysig = NULL, sig2Ratio=2, bin.mu = 0.5,
-                          ...) {
+rweSimuSingleArm <- function(nPat, muCov, sdCov, corCov, regCoeff, mix.phi = 1,
+                             fmla = NULL,
+                             type = c("continuous", "binary"),
+                             ysig = NULL, sig2Ratio=1, b0 = NULL, bin.mu = 0.5,
+                             ...) {
 
     type  <- match.arg(type);
-    COV.X <- rweSimuCov(nPat, muCov, sdCov, corCov);
+    COV.X <- rweSimuCov(nPat    = nPat,
+                        muCov   = muCov,
+                        sdCov   = sdCov,
+                        corCov  = corCov,
+                        mix.phi = mix.phi);
 
     ##simulate Y
     if ("continuous" == type) {
         ## epsilon
         if (is.null(ysig)) {
-            ysig <- rweGetYSig(sig2Ratio,
-                               muCov    = muCov,
-                               sdCov    = sdCov,
-                               corCov   = corCov,
-                               regCoeff = regCoeff,
-                               fmla     = fmla);
+            ysig <- rweGetYSig(muCov     = muCov,
+                               sdCov     = sdCov,
+                               corCov    = corCov,
+                               mix.phi   = mix.phi,
+                               regCoeff  = regCoeff,
+                               sig2Ratio = sig2Ratio,
+                               fmla      = fmla)[2];
         }
-        XBETA   <- rweXBeta(cov.x    = COV.X,
-                            regCoeff = regCoeff,
-                            fmla     = fmla);
+
+        ## no intercept
+        XBETA <- rweXBeta(cov.x    = COV.X,
+                          regCoeff = regCoeff,
+                          fmla     = fmla);
 
         EPSILON <- rweSimuError(nPat,
                                 ysig = ysig,
@@ -136,16 +184,19 @@ rweSimuOneArm <- function(nPat, muCov, sdCov, corCov, regCoeff, fmla = NULL,
 
         Y <- XBETA + EPSILON;
     } else if ("binary" == type) {
-        stopifnot(!is.null(bin.mu));
-        b0  <- rweGetBinInt(bin.mu,
-                            muCov    = muCov,
-                            sdCov    = sdCov,
-                            corCov   = corCov,
-                            regCoeff = regCoeff,
-                            fmla     = fmla);
+        if (is.null(b0)) {
+            stopifnot(!is.null(bin.mu));
+            b0  <- rweGetBinInt(bin.mu,
+                                muCov    = muCov,
+                                sdCov    = sdCov,
+                                corCov   = corCov,
+                                regCoeff = regCoeff,
+                                mix.phi  = mix.phi,
+                                fmla     = fmla);
+        }
 
         regCoeff <- c(b0, regCoeff);
-        XBETA    <- rweXBeta(cov.x    = COV.X,
+        XBETA    <- rweXBeta(cov.x    = cbind(1, COV.X),
                              regCoeff = regCoeff,
                              fmla     = fmla);
 
@@ -164,8 +215,9 @@ rweSimuOneArm <- function(nPat, muCov, sdCov, corCov, regCoeff, fmla = NULL,
 #'
 #' @export
 #'
-rweSimuTwoArm <- function(nPat, muCov, sdCov, corCov, regCoeff.y,
-                          regCoeff.z=0,
+rweSimuTwoArm <- function(nPat, muCov, sdCov, corCov,
+                          regCoeff.y, regCoeff.z=0,
+                          mix.phi = 1,
                           fmla.y = NULL, fmla.z = NULL, ysig = NULL, b0 = NULL,
                           sig2Ratio = 2, bin.mu = 0.5, ..., do.simu=TRUE) {
 
@@ -177,6 +229,7 @@ rweSimuTwoArm <- function(nPat, muCov, sdCov, corCov, regCoeff.y,
                             sdCov    = sdCov,
                             corCov   = corCov,
                             regCoeff = regCoeff.z,
+                            mix.phi  = mix.phi,
                             fmla     = fmla.z);
     }
 
@@ -187,12 +240,13 @@ rweSimuTwoArm <- function(nPat, muCov, sdCov, corCov, regCoeff.y,
                            sdCov    = sdCov,
                            corCov   = corCov,
                            regCoeff = regCoeff.y[-1],
+                           mix.phi  = mix.phi,
                            fmla     = fmla.y);
     }
 
     if (do.simu) {
         ##covariates
-        COV.X   <- rweSimuCov(nPat, muCov, sdCov, corCov);
+        COV.X   <- rweSimuCov(nPat = nPat, muCov = muCov, sdCov = sdCov, corCov = corCov, mix.phi = mix.phi);
         xbeta.z <- rweXBeta(cov.x    = COV.X,
                             regCoeff = regCoeff.z,
                             fmla     = fmla.z);
@@ -210,46 +264,24 @@ rweSimuTwoArm <- function(nPat, muCov, sdCov, corCov, regCoeff.y,
     rst
 }
 
-#' Get unbalance in baseline covariates
+#' Simulate data from an existing dataset
+#'
 #'
 #' @inheritParams simupara
 #'
 #' @export
-rweUnbalance <- function(nPat, ..., pts = NULL) {
-    if (is.null(pts)) {
-        pts <- rweSimuTwoArm(nPat, ...);
-    }
-
-    ##unbalance
-    inx.0 <- which(0 == pts[,"Z"]);
-    c.xy  <- colnames(pts);
-    c.xy  <- c.xy[grep("^V[0-9]+$", c.xy)];
-    unb   <- NULL;
-    for (i in 1:length(c.xy)) {
-        x0     <- sample(pts[inx.0,  c.xy[i]], size = nPat, replace = TRUE);
-        x1     <- sample(pts[-inx.0, c.xy[i]], size = nPat, replace = TRUE);
-        x.diff <- x1 - x0;
-        unb    <- rbind(unb, data.frame(V=c.xy[i], Diff=x1 - x0));
-    }
-    unb
-}
-
-#' Simulate data from an existing dataset
 #'
-#'
-#'
-#' @export
-#'
-rweSimuFromTrial <- function(trial.data, sizes,
-                             group = "A", outcome = "Y", keep.group = TRUE,
+rweSimuFromTrial <- function(nPat,
+                             trial.data, group = "A", outcome = "Y",
+                             keep.group = TRUE,
                              trt.effect = 0,
                              with.replacement = FALSE,
                              seed = NULL) {
     if (!is.null(seed))
         set.seed(seed);
 
-    if (1 == length(sizes)) {
-        sizes <- rep(sizes,2);
+    if (1 == length(nPat)) {
+        nPat <- rep(nPat,2);
     }
 
     if (keep.group) {
@@ -257,7 +289,7 @@ rweSimuFromTrial <- function(trial.data, sizes,
         rst    <- NULL;
         mean.y <- NULL;
         for (i in 1:length(arms)) {
-            cur.n   <- sizes[min(i, length(sizes))];
+            cur.n   <- nPat[min(i, length(nPat))];
             cur.d   <- trial.data[arms[i] == trial.data[[group]],];
             mean.y  <- c(mean.y, mean(cur.d[[outcome]]));
             if (nrow(cur.d) > cur.n) {
@@ -274,7 +306,7 @@ rweSimuFromTrial <- function(trial.data, sizes,
         simu.data  <- rst;
     } else {
         cur.d <- trial.data;
-        cur.n <- sum(sizes);
+        cur.n <- sum(nPat);
         if (nrow(cur.d) > cur.n) {
             wr <- with.replacement;
         } else {
@@ -282,18 +314,18 @@ rweSimuFromTrial <- function(trial.data, sizes,
         }
         cur.smp <- cur.d[sample(1:nrow(cur.d), cur.n, replace=wr), ];
 
-        for (i in 1:length(sizes)) {
+        for (i in 1:length(nPat)) {
             if (1 == i) {
                 tmp.start <- 1
             } else {
-                tmp.start <- sum(sizes[1:(i-1)]);
+                tmp.start <- sum(nPat[1:(i-1)]);
             }
 
-            tmp.end <- sum(sizes[1:i]);
+            tmp.end <- sum(nPat[1:i]);
             cur.smp[tmp.start:tmp.end,group] <- i-1;
         }
 
-        last.arm <- (length(sizes)-1) == cur.smp[[group]];
+        last.arm <- (length(nPat)-1) == cur.smp[[group]];
         cur.smp[last.arm, outcome] <- cur.smp[last.arm, outcome] + trt.effect;
 
         trt.effect <- trt.effect;

@@ -35,14 +35,21 @@ NULL
 #' @param sdCov    standard deviation vector of covariates
 #' @param corCov   correlation of covariates
 #' @param regCoeff regression coefficients
+#' @param mix.phi  weight in mixture model
 #' @param type     distributions of the random error
 #' @param ysig     standard error of the random error
 #' @param skew.n   parameter of negative bionomial distribution
 #' @param skew.p   parameter of negative bionomial distribution
 #' @param b0       intercept in regession model
 #' @param bin.mu      mean of the binary outcomes used to compute b0
-#' @param formula.z   formula of the treatement assignment model. No intercept term.
-#' @param formula.y   formula of the outcome model. No intercept term.
+#' @param formula.z        formula of the treatement assignment model. No intercept term.
+#' @param formula.y        formula of the outcome model. No intercept term.
+#' @param trial.data       existing clinical trial data
+#' @param group            column referring to arm in the existing dataset
+#' @param outcome          column referring to outcome in the existing dataset
+#' @param trt.effec        true treatment effect to be set
+#' @param with.replacement sample with or without replacement from the existing dataset
+#' @param keep.group       sample ignore arm assignment in the existing dataset
 #'
 #'
 NULL

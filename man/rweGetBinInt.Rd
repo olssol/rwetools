@@ -4,12 +4,15 @@
 \alias{rweGetBinInt}
 \title{Get intercept for a binary outcome.}
 \usage{
-rweGetBinInt(bin.mu, nPat = 10000, xbeta = NULL, ...)
+rweGetBinInt(..., nPat = 5e+05, xbeta = NULL, bin.mu = 0.5)
 }
 \arguments{
-\item{bin.mu}{mean of the binary outcomes used to compute b0}
+\item{...}{Parameters for simulating covariates by function
+\code{\link{rweXBeta}} and \code{\link{rweSimuCov}}}
 
 \item{nPat}{number of patients}
+
+\item{bin.mu}{mean of the binary outcomes used to compute b0}
 }
 \value{
 standard error or the random error term

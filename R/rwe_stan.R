@@ -32,17 +32,16 @@ rweSTAN <- function(lst.data, stan.mdl = "powerp",
 #'
 #'
 #' @param data class DWITHPS data frame
-#' @param A    power of the power prior
+#' @param As   power of the power prior for each strata
 #' @param ...  extra parameters for calling function \code{\link{rweSTAN}}
 #'
 #' @export
 #'
-rweDrawPost <- function(data, v.outcome = "Y", A=0, type = c("continuous", "binary"), ...) {
-
+rweDrawPost <- function(data, v.outcome = "Y", As=0, type = c("continuous", "binary"), ...) {
     stopifnot("RWE_DWITHPS" %in% class(data));
     stopifnot(v.outcome %in% colnames(data));
-    type <- match.arg(type);
 
+    type     <- match.arg(type);
     stan.mdl <- switch(type,
                        continuous = "powerp",
                        binary     = "powerpbinary");
@@ -67,7 +66,8 @@ rweDrawPost <- function(data, v.outcome = "Y", A=0, type = c("continuous", "bina
             Y0 <- cur.d0;
         }
 
-        cur.post  <- rweSTAN(lst.data = list(A=A, N0=N0, N1=N1, Y0=Y0, Y1=Y1),
+        cur.A     <- As[min(i, length(As))];
+        cur.post  <- rweSTAN(lst.data = list(A=cur.A, N0=N0, N1=N1, Y0=Y0, Y1=Y1),
                              stan.mdl = stan.mdl, ...);
         cur.theta <- rstan::extract(cur.post, pars = "theta")$theta;
         rst.theta <- rbind(rst.theta, cur.theta);
@@ -76,3 +76,32 @@ rweDrawPost <- function(data, v.outcome = "Y", A=0, type = c("continuous", "bina
     rst.theta
 }
 
+#' Summary Posterior theta
+#'
+#'
+#' @param post.theta posterior samples from STAN
+#' @param true.theta true value of theta
+#' @param quants     quantiles
+#'
+#' @export
+#'
+rweSummaryPost <- function(post.theta, true.theta, quants = c(0.025, 0.975)) {
+
+    cur.post        <- apply(post.theta, 2, mean);
+    cur.m           <- mean(cur.post);
+    cur.ci          <- quantile(cur.post, quants);
+    post.var        <- apply(post.theta, 1, var);
+    names(post.var) <- paste("var", 1:length(post.var), sep = "");
+    range.ci        <- range(cur.ci);
+
+    rst <- c(thetahat = cur.m,
+             thetavar = var(cur.post),
+             bias     = cur.m - true.theta,
+             mse      = (cur.m - true.theta)^2,
+             width    = range.ci[2] - range.ci[1],
+             cover    = true.theta >= range.ci[1] & true.theta <= range.ci[2],
+             post.var,
+             cur.ci);
+    rst
+
+}

@@ -4,13 +4,13 @@
 \alias{rweGetYSig}
 \title{Compute standard error of the random error}
 \usage{
-rweGetYSig(sig2Ratio, nPat = 10000, xbeta = NULL, ...)
+rweGetYSig(..., nPat = 5e+05, xbeta = NULL, sig2Ratio = 1)
 }
 \arguments{
 \item{nPat}{number of patients}
 }
 \value{
-standard error or the random error term
+mean of xbeta and standard error or the random error term
 }
 \description{
 Compute standard error of the random error

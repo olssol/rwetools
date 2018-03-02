@@ -14,6 +14,8 @@
 
 \item{regCoeff}{regression coefficients}
 
+\item{mix.phi}{weight in mixture model}
+
 \item{type}{distributions of the random error}
 
 \item{ysig}{standard error of the random error}
@@ -29,6 +31,18 @@
 \item{formula.z}{formula of the treatement assignment model. No intercept term.}
 
 \item{formula.y}{formula of the outcome model. No intercept term.}
+
+\item{trial.data}{existing clinical trial data}
+
+\item{group}{column referring to arm in the existing dataset}
+
+\item{outcome}{column referring to outcome in the existing dataset}
+
+\item{trt.effec}{true treatment effect to be set}
+
+\item{with.replacement}{sample with or without replacement from the existing dataset}
+
+\item{keep.group}{sample ignore arm assignment in the existing dataset}
 }
 \description{
 Parameters for simulating data

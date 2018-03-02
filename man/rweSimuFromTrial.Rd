@@ -4,9 +4,22 @@
 \alias{rweSimuFromTrial}
 \title{Simulate data from an existing dataset}
 \usage{
-rweSimuFromTrial(trial.data, sizes, group = "A", outcome = "Y",
-  keep.arm = TRUE, trt.effect = 0, with.replacement = FALSE,
+rweSimuFromTrial(nPat, trial.data, group = "A", outcome = "Y",
+  keep.group = TRUE, trt.effect = 0, with.replacement = FALSE,
   seed = NULL)
+}
+\arguments{
+\item{nPat}{number of patients}
+
+\item{trial.data}{existing clinical trial data}
+
+\item{group}{column referring to arm in the existing dataset}
+
+\item{outcome}{column referring to outcome in the existing dataset}
+
+\item{keep.group}{sample ignore arm assignment in the existing dataset}
+
+\item{with.replacement}{sample with or without replacement from the existing dataset}
 }
 \description{
 Simulate data from an existing dataset

@@ -5,8 +5,8 @@
 \title{Simulate continuous outcomes for a two arm study}
 \usage{
 rweSimuTwoArm(nPat, muCov, sdCov, corCov, regCoeff.y, regCoeff.z = 0,
-  fmla.y = NULL, fmla.z = NULL, ysig = NULL, b0 = NULL, sig2Ratio = 2,
-  bin.mu = 0.5, ..., do.simu = TRUE)
+  mix.phi = 1, fmla.y = NULL, fmla.z = NULL, ysig = NULL, b0 = NULL,
+  sig2Ratio = 2, bin.mu = 0.5, ..., do.simu = TRUE)
 }
 \arguments{
 \item{nPat}{number of patients}
@@ -16,6 +16,8 @@ rweSimuTwoArm(nPat, muCov, sdCov, corCov, regCoeff.y, regCoeff.z = 0,
 \item{sdCov}{standard deviation vector of covariates}
 
 \item{corCov}{correlation of covariates}
+
+\item{mix.phi}{weight in mixture model}
 
 \item{ysig}{standard error of the random error}
 
