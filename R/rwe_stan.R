@@ -82,12 +82,13 @@ rweDrawPost <- function(data, v.outcome = "Y", As=0, type = c("continuous", "bin
 #' @param post.theta posterior samples from STAN
 #' @param true.theta true value of theta
 #' @param quants     quantiles
+#' @param weights    number of subjects in each strata as the weight
 #'
 #' @export
 #'
-rweSummaryPost <- function(post.theta, true.theta, quants = c(0.025, 0.975)) {
+rweSummaryPost <- function(post.theta, true.theta, quants = c(0.025, 0.975), weights=1) {
 
-    cur.post        <- apply(post.theta, 2, mean);
+    cur.post        <- apply(post.theta, 2, function(x) {mean(weights*x)});
     cur.m           <- mean(cur.post);
     cur.ci          <- quantile(cur.post, quants);
     post.var        <- apply(post.theta, 1, var);

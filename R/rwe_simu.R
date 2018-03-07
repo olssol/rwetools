@@ -276,6 +276,7 @@ rweSimuFromTrial <- function(nPat,
                              keep.group = TRUE,
                              trt.effect = 0,
                              with.replacement = FALSE,
+                             ratio.size = 1,
                              seed = NULL) {
     if (!is.null(seed))
         set.seed(seed);
@@ -289,9 +290,12 @@ rweSimuFromTrial <- function(nPat,
         rst    <- NULL;
         mean.y <- NULL;
         for (i in 1:length(arms)) {
-            cur.n   <- nPat[min(i, length(nPat))];
             cur.d   <- trial.data[arms[i] == trial.data[[group]],];
             mean.y  <- c(mean.y, mean(cur.d[[outcome]]));
+
+            cur.n   <- nPat[min(i, length(nPat))];
+            cur.n   <- ceiling(cur.n * ratio.size);
+
             if (nrow(cur.d) > cur.n) {
                 wr <- with.replacement;
             } else {
@@ -307,6 +311,8 @@ rweSimuFromTrial <- function(nPat,
     } else {
         cur.d <- trial.data;
         cur.n <- sum(nPat);
+        cur.n <- ceiling(cur.n * ratio.size);
+
         if (nrow(cur.d) > cur.n) {
             wr <- with.replacement;
         } else {

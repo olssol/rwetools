@@ -79,3 +79,5 @@ rweKL <- function(sample.F0, sample.F1, n.bins = 10, epsilon = 10^-6) {
 
     c(n0,n1,rst);
 }
+
+

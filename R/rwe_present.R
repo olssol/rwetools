@@ -25,6 +25,35 @@ rweExpRst <- function(numbers, template.f,  out.f="rst.txt", sub.str="AA") {
     write(tpla, file=out.f);
 }
 
+#' Combining simulation results
+#'
+#' @param lst.rst List of simulation results. Each element represents a
+#'     replication
+#' @export
+#'
+rweSimuCombine <- function(lst.rst, fun = mean) {
+    nreps <- length(lst.rst);
+    rep1  <- lst.rst[[1]];
+
+    lst.combine <- rep(list(NULL), length(rep1));
+    for (i in 1:nreps) {
+        for (j in 1:length(rep1)) {
+            cur.value        <- lst.rst[[i]][[j]];
+            lst.combine[[j]] <- rbind(lst.combine[[j]],
+                                      as.vector(as.matrix(cur.value)));
+        }
+    }
+
+    for (j in 1:length(lst.combine)) {
+        cur.rst           <- apply(lst.combine[[j]], 2, fun);
+        dim(cur.rst)      <- dim(as.matrix(rep1[[j]]));
+        dimnames(cur.rst) <- dimnames(as.matrix(rep1[[j]]));
+        lst.combine[[j]]  <- cur.rst;
+    }
+
+    names(lst.combine) <- names(rep1);
+    lst.combine
+}
 
 #' Plot unbalance in covariates
 #'
