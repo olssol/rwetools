@@ -6,7 +6,7 @@
 \usage{
 rweSimuFromTrial(nPat, trial.data, group = "A", outcome = "Y",
   keep.group = TRUE, trt.effect = 0, with.replacement = FALSE,
-  seed = NULL)
+  ratio.size = 1, seed = NULL)
 }
 \arguments{
 \item{nPat}{number of patients}

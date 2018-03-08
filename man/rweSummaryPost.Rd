@@ -4,7 +4,8 @@
 \alias{rweSummaryPost}
 \title{Summary Posterior theta}
 \usage{
-rweSummaryPost(post.theta, true.theta, quants = c(0.025, 0.975))
+rweSummaryPost(post.theta, true.theta, quants = c(0.025, 0.975),
+  weights = 1)
 }
 \arguments{
 \item{post.theta}{posterior samples from STAN}
@@ -12,6 +13,8 @@ rweSummaryPost(post.theta, true.theta, quants = c(0.025, 0.975))
 \item{true.theta}{true value of theta}
 
 \item{quants}{quantiles}
+
+\item{weights}{number of subjects in each strata as the weight}
 }
 \description{
 Summary Posterior theta
