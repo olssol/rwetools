@@ -33,14 +33,23 @@ get.covmat <- function(StDevCovar, corrCovar) {
     CovarMat
 }
 
-get.ps <- function(dta, ps.fml = NULL, ps.cov = NULL, grp="group", delta = 0) {
+get.ps <- function(dta, ps.fml = NULL, ps.cov = NULL, grp="group", delta = 0,
+                   type = c("randomforest", "logistic"), ...) {
+
+    type <- match.arg(type);
+
     ## generate formula
     if (is.null(ps.fml))
         ps.fml <- as.formula(paste(grp, "~", paste(ps.cov, collapse="+"), sep=""));
 
     ## fit model
-    glm.fit   <- glm(ps.fml, family=binomial, data=dta);
-    est.ps    <- glm.fit$fitted;
+    switch(type,
+           logistic = {glm.fit <- glm(ps.fml, family=binomial, data=dta, ...);
+                       est.ps <- glm.fit$fitted;},
+           randomforest = {dta[[grp]] <- as.factor(dta[[grp]]);
+                           rf.fit     <- randomForest(ps.fml, data = dta, ...);
+                           est.ps     <- predict(rf.fit, type = "prob")[,2];
+                          });
 
     ##exponential tilting for z=1 only
     if (0 != delta) {

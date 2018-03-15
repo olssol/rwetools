@@ -1,14 +1,15 @@
 #' Get propensity scores
 #'
+#' @param ... parameters to get propensity scores
 #'
 #' @export
 #'
-rwePS <- function(data, formula = NULL, v.grp = "group", v.covs = "V1", d1.grp = 1, delta = 0, nstrata = 5) {
+rwePS <- function(data, formula = NULL, v.grp = "group", v.covs = "V1", d1.grp = 1, nstrata = 5, ...) {
 
     dnames <- colnames(data);
     stopifnot(v.grp %in% dnames);
 
-    all.ps  <- get.ps(data, ps.fml = formula, ps.cov = v.covs, grp = v.grp, delta = delta);
+    all.ps  <- get.ps(data, ps.fml = formula, ps.cov = v.covs, grp = v.grp, ...);
     D1.ps   <- all.ps[which(d1.grp == data[[v.grp]])];
     cuts    <- quantile(D1.ps, seq(0, 1,length=nstrata+1));
     cuts[1] <- cuts[1] - 0.001;

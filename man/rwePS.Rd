@@ -5,7 +5,10 @@
 \title{Get propensity scores}
 \usage{
 rwePS(data, formula = NULL, v.grp = "group", v.covs = "V1", d1.grp = 1,
-  delta = 0, nstrata = 5)
+  nstrata = 5, ...)
+}
+\arguments{
+\item{...}{parameters to get propensity scores}
 }
 \description{
 Get propensity scores
