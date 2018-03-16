@@ -62,9 +62,15 @@ rweUnbalance <- function(nPat, ..., pts = NULL, covs = NULL, diff = TRUE,
 #'
 rweKL <- function(sample.F0, sample.F1, n.bins = 10, epsilon = 10^-6) {
     smps     <- c(sample.F0, sample.F1);
-    cut.smps <- as.numeric(cut(smps, breaks = n.bins));
     n0       <- length(sample.F0);
     n1       <- length(sample.F1);
+
+    if (1 == length(unique(smps))) {
+        cut.smps <- rep(1, n0+n1)
+        n.bins   <- 1;
+    } else {
+        cut.smps <- as.numeric(cut(smps, breaks = n.bins));
+    }
 
     rst <- 0;
     for (j in 1:n.bins) {
