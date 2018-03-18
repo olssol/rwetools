@@ -68,6 +68,8 @@ rweKL <- function(sample.F0, sample.F1, n.bins = 10, epsilon = 10^-6) {
     if (1 == length(unique(smps))) {
         cut.smps <- rep(1, n0+n1)
         n.bins   <- 1;
+        warning("Distribution for Kullback-Leibler distance calculation is degenerate.",
+                call. = FALSE);
     } else {
         cut.smps <- as.numeric(cut(smps, breaks = n.bins));
     }

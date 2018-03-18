@@ -34,7 +34,7 @@ get.covmat <- function(StDevCovar, corrCovar) {
 }
 
 get.ps <- function(dta, ps.fml = NULL, ps.cov = NULL, grp="group", delta = 0,
-                   type = c("randomforest", "logistic"), ...) {
+                   type = c("randomforest", "logistic"), ntree = 5000, ...) {
 
     type <- match.arg(type);
 
@@ -42,12 +42,13 @@ get.ps <- function(dta, ps.fml = NULL, ps.cov = NULL, grp="group", delta = 0,
     if (is.null(ps.fml))
         ps.fml <- as.formula(paste(grp, "~", paste(ps.cov, collapse="+"), sep=""));
 
+
     ## fit model
     switch(type,
            logistic = {glm.fit <- glm(ps.fml, family=binomial, data=dta, ...);
                        est.ps <- glm.fit$fitted;},
            randomforest = {dta[[grp]] <- as.factor(dta[[grp]]);
-                           rf.fit     <- randomForest(ps.fml, data = dta, ...);
+                           rf.fit     <- randomForest(ps.fml, data = dta, ntree = ntree, ...);
                            est.ps     <- predict(rf.fit, type = "prob")[,2];
                           });
 
