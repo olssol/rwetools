@@ -1,4 +1,3 @@
-
 ##----------------------------------------------------------------------------
 ##                GENERAL FUNCTIONS
 ##----------------------------------------------------------------------------
@@ -8,6 +7,14 @@ make.global <- function(alist, dest.env='.GlobalEnv') {
         assign(names(alist[i]), alist[[i]], dest.env );
     }
 }
+
+get.rwe.class <- function(c.str = c("DWITHPS", "PSKL")) {
+    c.str <- match.arg(c.str);
+    switch(c.str,
+           DWITHPS = "RWE_DWITHPS",
+           PSKL    = "RWE_PSKL");
+}
+
 
 expit <- function(x) {
     ex <- exp(x);
@@ -33,6 +40,7 @@ get.covmat <- function(StDevCovar, corrCovar) {
     CovarMat
 }
 
+##compute propensity scores
 get.ps <- function(dta, ps.fml = NULL, ps.cov = NULL, grp="group", delta = 0,
                    type = c("randomforest", "logistic"), ntree = 5000, ...) {
 
@@ -67,9 +75,31 @@ get.xbeta <- function(covX, regCoeff) {
     apply(covX, 1, function(x) {sum(x * regCoeff)});
 }
 
-get.rwe.class <- function(c.str = c("DWITHPS", "PSKL")) {
-    c.str <- match.arg(c.str);
-    switch(c.str,
-           DWITHPS = "RWE_DWITHPS",
-           PSKL    = "RWE_PSKL");
+## cut covariates into categories
+get.cov.cat <- function(covX, breaks = NULL) {
+
+    f.cut <- function(x, bs) {
+        if (is.null(bs))
+            return(x);
+
+        bs  <- sort(unique(c(-Inf, bs, Inf)));
+        rst <- as.numeric(cut(x, breaks = bs));
+        rst
+    }
+
+    if (is.null(breaks))
+        return(covX);
+
+    if (is.numeric(breaks)) {
+        rst <- apply(covX, 1, f.cut, breaks);
+        rst <- t(rst);
+    } else if (is.list(breaks)) {
+        rst <- NULL;
+        for (i in 1:ncol(covX)) {
+            rst <- cbind(rst, f.cut(covX[,i], breaks[[i]]))
+        }
+    }
+
+    rst
 }
+

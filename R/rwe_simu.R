@@ -4,7 +4,7 @@
 #'
 #' @export
 #'
-rweSimuCov <- function(nPat, muCov, sdCov, corCov, mix.phi = 1, seed = NULL) {
+rweSimuCov <- function(nPat, muCov, sdCov, corCov, mix.phi = 1, seed = NULL, cov.breaks = NULL) {
 
     f.cur <- function(x, i) {
         if (is.array(x)) {
@@ -35,9 +35,10 @@ rweSimuCov <- function(nPat, muCov, sdCov, corCov, mix.phi = 1, seed = NULL) {
         cur.x   <- rmvnorm(n.pts[i],
                            mean=cur.mu,
                            sigma=get.covmat(cur.sd, cur.cor));
-        cov.x <- rbind(cov.x, cur.x);
+        cov.x   <- rbind(cov.x, cur.x);
     }
 
+    cov.x <- get.cov.cat(cov.x, cov.breaks);
     colnames(cov.x) <- paste("V", 1:ncol(cov.x), sep="");
     data.frame(cov.x);
 }
@@ -350,7 +351,19 @@ rweSimuFromTrial <- function(nPat,
 #'     replication
 #' @export
 #'
-rweSimuCombine <- function(lst.rst, fun = mean) {
+rweSimuCombine <- function(lst.rst, fun = mean, ignore.error = TRUE) {
+
+    if (ignore.error) {
+        err.inx <- NULL;
+        for (i in 1:length(lst.rst)) {
+            if ("try-error" == class(lst.rst[[i]]))
+                err.inx <- c(err.inx, i);
+        }
+
+        if (!is.null(err.inx))
+            lst.rst <- lst.rst[-err.inx];
+    }
+
     nreps <- length(lst.rst);
     rep1  <- lst.rst[[1]];
 
