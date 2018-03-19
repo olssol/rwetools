@@ -11,7 +11,7 @@ rwePS <- function(data, ps.fml = NULL, v.grp = "group", v.covs = "V1", d1.grp = 
 
     ## generate formula
     if (is.null(ps.fml))
-        ps.fml <- as.formula(paste(grp, "~", paste(ps.cov, collapse="+"), sep=""));
+        ps.fml <- as.formula(paste(v.grp, "~", paste(v.covs, collapse="+"), sep=""));
 
     all.ps  <- get.ps(data, ps.fml = ps.fml, ...);
     D1.ps   <- all.ps[which(d1.grp == data[[v.grp]])];

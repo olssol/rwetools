@@ -31,16 +31,17 @@ rweSTAN <- function(lst.data, stan.mdl = "powerp",
 #' Get Posterior for all stratum
 #'
 #'
-#' @param data class DWITHPS data frame
+#' @param data.ps class DWITHPS data frame
 #' @param As   power of the power prior for each strata
 #' @param ...  extra parameters for calling function \code{\link{rweSTAN}}
 #'
 #' @export
 #'
-rweDrawPost <- function(data, v.outcome = "Y", As=0, type = c("continuous", "binary"), ...) {
-    stopifnot("RWE_DWITHPS" %in% class(data));
-    stopifnot(v.outcome %in% colnames(data));
+rweDrawPost <- function(data.ps, v.outcome = "Y", As=0, type = c("continuous", "binary"), ...) {
+    stopifnot("RWE_DWITHPS" %in% class(data.ps));
 
+    data <- data.ps$data;
+    stopifnot(v.outcome %in% colnames(data));
     type     <- match.arg(type);
     stan.mdl <- switch(type,
                        continuous = "powerp",
