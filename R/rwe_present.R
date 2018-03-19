@@ -4,13 +4,13 @@
 #' @export
 #'
 rwePlotUnbalance <- function(data.unb,
-                             var.x = "Diff",
+                             var.x     = "Diff",
                              var.group = NULL,
-                             xlim = NULL,
-                             ylim = NULL,
-                             title = "",
-                             f.grid = formula("V~Study"),
-                             adjust = 1) {
+                             xlim      = NULL,
+                             ylim      = NULL,
+                             title     = "",
+                             f.grid    = formula("V~Study"),
+                             adjust    = 1) {
 
     if (is.null(var.group)) {
         rst <- ggplot(data.unb, aes_string(x=var.x)) +
@@ -42,4 +42,20 @@ rwePlotUnbalance <- function(data.unb,
         rst <- rst + scale_y_continuous(limits = ylim);
 
     rst
+}
+
+
+#' Plot PS distributions
+#'
+#'
+#' @method plot RWE_DWITHPS
+#'
+#' @export
+#'
+plot.RWE_DWITHPS <- function(x, type = c("ps", "balance"), ...) {
+    type <- match.arg(type);
+
+    switch(type,
+           ps = plotRwePs(x, ...),
+           balance = plotRweBalance(x, ...));
 }

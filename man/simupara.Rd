@@ -16,6 +16,10 @@
 
 \item{mix.phi}{weight in mixture model}
 
+\item{cov.breaks}{breaks to cut covaraites into categories. If numeric, the
+same cuts will be applied to all covariates. If list, each covariates
+will be categorized based on its own breaks. If NULL, keep continuous.}
+
 \item{type}{distributions of the random error}
 
 \item{ysig}{standard error of the random error}
@@ -28,7 +32,8 @@
 
 \item{bin.mu}{mean of the binary outcomes used to compute b0}
 
-\item{formula.z}{formula of the treatement assignment model. No intercept term.}
+\item{formula.z}{formula of the treatement assignment model. No intercept
+term.}
 
 \item{formula.y}{formula of the outcome model. No intercept term.}
 
@@ -40,7 +45,8 @@
 
 \item{trt.effec}{true treatment effect to be set}
 
-\item{with.replacement}{sample with or without replacement from the existing dataset}
+\item{with.replacement}{sample with or without replacement from the existing
+dataset}
 
 \item{keep.group}{sample ignore arm assignment in the existing dataset}
 }

@@ -5,8 +5,9 @@
 \title{Simulate continuous outcomes for a two arm study}
 \usage{
 rweSimuTwoArm(nPat, muCov, sdCov, corCov, regCoeff.y, regCoeff.z = 0,
-  mix.phi = 1, fmla.y = NULL, fmla.z = NULL, ysig = NULL, b0 = NULL,
-  sig2Ratio = 2, bin.mu = 0.5, ..., do.simu = TRUE)
+  mix.phi = 1, cov.breaks = NULL, fmla.y = NULL, fmla.z = NULL,
+  ysig = NULL, b0 = NULL, sig2Ratio = 2, bin.mu = 0.5, ...,
+  do.simu = TRUE)
 }
 \arguments{
 \item{nPat}{number of patients}
@@ -18,6 +19,10 @@ rweSimuTwoArm(nPat, muCov, sdCov, corCov, regCoeff.y, regCoeff.z = 0,
 \item{corCov}{correlation of covariates}
 
 \item{mix.phi}{weight in mixture model}
+
+\item{cov.breaks}{breaks to cut covaraites into categories. If numeric, the
+same cuts will be applied to all covariates. If list, each covariates
+will be categorized based on its own breaks. If NULL, keep continuous.}
 
 \item{ysig}{standard error of the random error}
 

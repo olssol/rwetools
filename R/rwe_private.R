@@ -1,4 +1,15 @@
 ##----------------------------------------------------------------------------
+##                SETTING
+##----------------------------------------------------------------------------
+get.rwe.class <- function(c.str = c("DWITHPS", "PSKL")) {
+    c.str <- match.arg(c.str);
+    switch(c.str,
+           DWITHPS = "RWE_DWITHPS",
+           PSKL    = "RWE_PSKL");
+}
+
+
+##----------------------------------------------------------------------------
 ##                GENERAL FUNCTIONS
 ##----------------------------------------------------------------------------
 
@@ -8,18 +19,16 @@ make.global <- function(alist, dest.env='.GlobalEnv') {
     }
 }
 
-get.rwe.class <- function(c.str = c("DWITHPS", "PSKL")) {
-    c.str <- match.arg(c.str);
-    switch(c.str,
-           DWITHPS = "RWE_DWITHPS",
-           PSKL    = "RWE_PSKL");
-}
-
 
 expit <- function(x) {
     ex <- exp(x);
     ex/(1+ex);
 }
+
+get.xbeta <- function(covX, regCoeff) {
+    apply(covX, 1, function(x) {sum(x * regCoeff)});
+}
+
 
 get.covmat <- function(StDevCovar, corrCovar) {
     n.x      <- length(StDevCovar);
@@ -40,9 +49,39 @@ get.covmat <- function(StDevCovar, corrCovar) {
     CovarMat
 }
 
+## cut covariates into categories
+get.cov.cat <- function(covX, breaks = NULL) {
+    f.cut <- function(x, bs) {
+        if (is.null(bs))
+            return(x);
+
+        bs  <- sort(unique(c(-Inf, bs, Inf)));
+        rst <- as.numeric(cut(x, breaks = bs)) - 1;
+        factor(rst);
+    }
+
+    if (is.null(breaks))
+        return(covX);
+
+    if (is.numeric(breaks)) {
+        rst <- apply(covX, 1, f.cut, breaks);
+        rst <- t(rst);
+    } else if (is.list(breaks)) {
+        rst <- covX;
+        for (i in 1:min(ncol(covX), length(breaks))) {
+            rst[,i] <- f.cut(covX[,i], breaks[[i]]);
+        }
+    }
+
+    rst
+}
+
+##----------------------------------------------------------------------------
+##                PROPENSITY SCORES
+##----------------------------------------------------------------------------
 ##compute propensity scores
-get.ps <- function(dta, ps.fml = NULL, ps.cov = NULL, grp="group", delta = 0,
-                   type = c("randomforest", "logistic"), ntree = 5000, ...) {
+get.ps <- function(dta, ps.fml, type = c("randomforest", "logistic"), ntree = 5000,
+                   ..., grp = NULL, ps.cov = NULL) {
 
     type <- match.arg(type);
 
@@ -50,6 +89,8 @@ get.ps <- function(dta, ps.fml = NULL, ps.cov = NULL, grp="group", delta = 0,
     if (is.null(ps.fml))
         ps.fml <- as.formula(paste(grp, "~", paste(ps.cov, collapse="+"), sep=""));
 
+    ## identify grp if passed from formula
+    grp <- all.vars(ps.fml)[1];
 
     ## fit model
     switch(type,
@@ -60,46 +101,174 @@ get.ps <- function(dta, ps.fml = NULL, ps.cov = NULL, grp="group", delta = 0,
                            est.ps     <- predict(rf.fit, type = "prob")[,2];
                           });
 
-    ##exponential tilting for z=1 only
-    if (0 != delta) {
-        e.delta        <- exp(delta);
-        est.ps.delta   <- sapply(est.ps, function(x) {x*e.delta/(x*e.delta+1-x)});
-        inx.z1         <- which(1 == dta[, grp]);
-        est.ps[inx.z1] <- est.ps.delta[inx.z1];
-    }
-
     est.ps
 }
 
-get.xbeta <- function(covX, regCoeff) {
-    apply(covX, 1, function(x) {sum(x * regCoeff)});
-}
 
-## cut covariates into categories
-get.cov.cat <- function(covX, breaks = NULL) {
+##----------------------------------------------------------------------------
+##                PRESENTATION
+##----------------------------------------------------------------------------
+## plot density of propensity score
+plotRwePs <- function(data.withps, overall.inc = TRUE, add.text = TRUE, facet.scales = "free_y", ...) {
+    stopifnot(inherits(data.withps,
+                       what = get.rwe.class("DWITHPS")));
 
-    f.cut <- function(x, bs) {
-        if (is.null(bs))
-            return(x);
+    pskl        <- rwePSKL(data.withps, ...);
+    nstrata     <- data.withps$nstrata;
+    dtaps       <- data.withps$data;
 
-        bs  <- sort(unique(c(-Inf, bs, Inf)));
-        rst <- as.numeric(cut(x, breaks = bs));
-        rst
+    pskl$Strata <- as.factor(c(paste("Stratum ", 1:nstrata, sep = ""), "Overall"));
+    xlim        <- max(dtaps[which(!is.na(dtaps[["_strata_"]])),"_ps_"], na.rm = TRUE);
+
+    all.data <- NULL;
+    for (i in 1:nstrata) {
+        cur.sub  <- dtaps[which(i == dtaps[["_strata_"]]),];
+        cur.data <- data.frame(Strata = paste("Stratum ", i, sep = ""),
+                               Ps     = cur.sub[["_ps_"]],
+                               Group  = cur.sub[["_grp_"]]);
+        all.data <- rbind(all.data, cur.data);
     }
 
-    if (is.null(breaks))
-        return(covX);
+    if (overall.inc) {
+        cur.data <-  data.frame(Strata = "Overall",
+                                Ps     = dtaps[["_ps_"]],
+                                Group  = dtaps[["_grp_"]]);
 
-    if (is.numeric(breaks)) {
-        rst <- apply(covX, 1, f.cut, breaks);
-        rst <- t(rst);
-    } else if (is.list(breaks)) {
-        rst <- NULL;
-        for (i in 1:ncol(covX)) {
-            rst <- cbind(rst, f.cut(covX[,i], breaks[[i]]))
-        }
+        all.data <- rbind(all.data, cur.data);
     }
 
+    all.data$Group <- as.factor(all.data$Group);
+
+    rst <- ggplot(data = all.data, aes(x = Ps)) +
+        geom_density(alpha = 0.2,
+                       aes(group = Group,
+                           color = Group,
+                           fill  = Group,
+                           linetype = Group),
+                     trim  = TRUE,
+                     na.rm = TRUE) +
+        labs(x = "Propensity Score", y = "Density") +
+        scale_y_continuous(breaks = NULL) +
+        scale_x_continuous(limits = c(0, xlim)) +
+        theme_bw() +
+        theme(strip.background = element_blank(),
+              panel.grid = element_blank(),
+              panel.border = element_rect(colour = "black"),
+              panel.spacing = unit(0, "lines")) +
+        facet_grid(Strata ~ ., scales = facet.scales);
+
+    if (add.text) {
+        rst <- rst +
+            geom_text(x = Inf, y = Inf, hjust = 1, vjust = 1,
+                      aes(label = paste('N0=', N0,
+                                        ", N1=", N1,
+                                        ", KL=", format(KL, digits = 3),
+                                        sep = "")),
+                      data = pskl, size = 4);
+    }
     rst
 }
 
+plot.balance.fac <- function(dtaps, v, overall.inc = TRUE) {
+    cur.d <- rweFreqTbl(dtaps, var.groupby = c("Strata", "Group"), vars = v);
+    cur.d <- cur.d %>% dplyr::filter(!is.na(Strata));
+    cur.d$Strata <- paste("Stratum ", cur.d$Strata, sep = "")
+    if (overall.inc) {
+        cur.overall <- rweFreqTbl(dtaps, var.groupby = "Group", vars = v);
+        cur.overall$Strata <- "Overall";
+        cur.d <- rbind(cur.d, cur.overall);
+    }
+    cur.d$Group <- as.factor(cur.d$Group);
+    cur.d$Value <- as.factor(cur.d$Value);
+
+    rst <- ggplot(data = cur.d, aes(x = Value, y = Freq)) +
+        geom_bar(alpha = 0.4,
+                 stat = "identity",
+                 position = "dodge",
+                 aes(group = Group,
+                     linetype = Group,
+                     fill  = Group)) +
+        scale_y_continuous(breaks = NULL, limits = c(0,1)) +
+        scale_x_discrete(breaks = NULL) +
+        labs(x = "", y = "") +
+        facet_grid(Strata ~ .);
+    rst
+}
+
+plot.balance.cont <- function(dtaps, v, nstrata, overall.inc = TRUE, facet.scales = "free_y") {
+    cur.d <- NULL;
+    for (i in 1:nstrata) {
+        cur.sub      <- dtaps[which(i == dtaps[["_strata_"]]),];
+        cur.v        <- data.frame(Cov    = v,
+                                   Value  = cur.sub[[v]],
+                                   Group  = cur.sub[["_grp_"]]);
+        cur.v$Strata <- paste("Stratum ", i, sep = "");
+        cur.d        <- rbind(cur.d, cur.v);
+    }
+
+    if (overall.inc) {
+        cur.sub      <- dtaps;
+        cur.v        <- data.frame(Cov    = v,
+                                   Value  = cur.sub[[v]],
+                                   Group  = cur.sub[["_grp_"]]);
+        cur.v$Strata <- paste("Overall");
+        cur.d        <- rbind(cur.d, cur.v);
+    }
+    cur.d$Group <- as.factor(cur.d$Group);
+
+    rst <- ggplot(data = cur.d, aes(x = Value)) +
+        geom_density(alpha = 0.2,
+                     aes(group = Group,
+                         color = Group,
+                         fill  = Group,
+                         linetype = Group),
+                     na.rm = TRUE) +
+        scale_y_continuous(breaks = NULL) +
+        scale_x_continuous(breaks = NULL) +
+        labs(x = "", y = "") +
+        facet_grid(Strata ~ ., scales = facet.scales);
+    rst
+}
+
+
+plotRweBalance <- function(data.withps, overall.inc = TRUE, v.cov = NULL,
+                           facet.scales = "free_y", ...) {
+
+    if (is.null(v.cov))
+        v.cov <- all.vars(data.withps$ps.fml)[-1];
+
+    nstrata      <- data.withps$nstrata;
+    dtaps        <- data.withps$data;
+    dtaps$Strata <- dtaps[["_strata_"]];
+    dtaps$Group  <- dtaps[["_grp_"]];
+
+    rst <- list();
+    for (v in v.cov) {
+        if (is.factor(dtaps[[v]])) {
+            cur.p <- plot.balance.fac(dtaps, v, overall.inc = overall.inc);
+        } else {
+            cur.p <- plot.balance.cont(dtaps, v, nstrata = nstrata,
+                                       overall.inc = overall.inc, facet.scales = facet.scales);
+        }
+        cur.p <- cur.p +
+            labs(title = v) +
+            theme_bw() +
+            theme(strip.background = element_blank(),
+                  strip.placement  = "right",
+                  strip.text       = element_blank(),
+                  panel.grid       = element_blank(),
+                  panel.border     = element_blank(),
+                  panel.spacing    = unit(0, "lines"),
+                  plot.title = element_text(hjust = 0.5),
+                  legend.position  = "none",
+                  plot.margin      = unit(c(1,0,1,-0.5), "lines"));
+
+        rst[[v]] <- cur.p;
+    }
+
+    rst[[length(rst)]]     <- rst[[length(rst)]] + theme(strip.text = element_text(size=8),
+                                                         legend.position = "right");
+    rst$nrow               <- 1;
+    rst$rel_widths         <- c(rep(1, length(v.cov)-1), 2.5);
+    do.call(plot_grid, rst);
+}

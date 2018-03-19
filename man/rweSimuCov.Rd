@@ -4,7 +4,8 @@
 \alias{rweSimuCov}
 \title{Simulate covariates following a mixture of multivariate normal distribution}
 \usage{
-rweSimuCov(nPat, muCov, sdCov, corCov, mix.phi = 1, seed = NULL)
+rweSimuCov(nPat, muCov, sdCov, corCov, mix.phi = 1, seed = NULL,
+  cov.breaks = NULL)
 }
 \arguments{
 \item{nPat}{number of patients}
@@ -16,6 +17,10 @@ rweSimuCov(nPat, muCov, sdCov, corCov, mix.phi = 1, seed = NULL)
 \item{corCov}{correlation of covariates}
 
 \item{mix.phi}{weight in mixture model}
+
+\item{cov.breaks}{breaks to cut covaraites into categories. If numeric, the
+same cuts will be applied to all covariates. If list, each covariates
+will be categorized based on its own breaks. If NULL, keep continuous.}
 }
 \description{
 Simulate covariates following a mixture of multivariate normal distribution

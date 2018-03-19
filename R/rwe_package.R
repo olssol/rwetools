@@ -7,12 +7,16 @@
 #'
 #' @importFrom rstan     sampling extract stanc rstan_options traceplot stan_rhat
 #' @importFrom randomForest  randomForest
+#'
 #' @importFrom grDevices colors
 #' @importFrom graphics  axis box legend lines par plot points text
+#'
 #' @importFrom loo       extract_log_lik loo
 #' @importFrom parallel  detectCores
 #' @importFrom MCMCpack  rdirichlet
 #' @importFrom mvtnorm   rmvnorm
+#' @importFrom cowplot   plot_grid
+#' @importFrom dplyr %>% group_by_ group_by summarize mutate count_ mutate_if rename_ filter
 #'
 #' @import stats
 #' @import Rcpp

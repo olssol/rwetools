@@ -19,7 +19,8 @@ rweSimuFromTrial(nPat, trial.data, group = "A", outcome = "Y",
 
 \item{keep.group}{sample ignore arm assignment in the existing dataset}
 
-\item{with.replacement}{sample with or without replacement from the existing dataset}
+\item{with.replacement}{sample with or without replacement from the existing
+dataset}
 }
 \description{
 Simulate data from an existing dataset

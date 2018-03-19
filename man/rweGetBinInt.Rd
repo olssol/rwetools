@@ -4,11 +4,13 @@
 \alias{rweGetBinInt}
 \title{Get intercept for a binary outcome.}
 \usage{
-rweGetBinInt(..., nPat = 5e+05, xbeta = NULL, bin.mu = 0.5)
+rweGetBinInt(..., regCoeff, nPat = 5e+05, xbeta = NULL, bin.mu = 0.5)
 }
 \arguments{
 \item{...}{Parameters for simulating covariates by function
 \code{\link{rweXBeta}} and \code{\link{rweSimuCov}}}
+
+\item{regCoeff}{regression coefficients}
 
 \item{nPat}{number of patients}
 

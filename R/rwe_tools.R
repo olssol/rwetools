@@ -89,3 +89,31 @@ rweKL <- function(sample.F0, sample.F1, n.bins = 10, epsilon = 10^-6) {
 }
 
 
+#' Generate frequency table for factor columns
+#'
+#' @return a vector with the number of samples in group 0, the number of samples
+#'     in group 1, and the KL divergence from group 0 to group 1
+#' @export
+#'
+rweFreqTbl <- function(data, var.groupby, vars = NULL) {
+
+    if (is.null(vars))
+        vars <- colnames(data);
+
+    rst <- NULL;
+    for (v in vars) {
+        if (!is.factor(data[[v]]))
+            next;
+
+        cur.freq <- data %>% count_(c(var.groupby, v)) %>%
+            group_by_(.dots = var.groupby) %>%
+            mutate(Sum = sum(n), Freq = n/sum(n)) %>%
+            mutate_if(is.factor, as.character) %>%
+            mutate(Cov = v) %>%
+            rename_(Value = v);
+
+        rst <- rbind(rst, data.frame(cur.freq));
+    }
+
+    rst
+}

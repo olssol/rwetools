@@ -5,8 +5,8 @@
 \title{Simulate outcomes for a single arm study}
 \usage{
 rweSimuSingleArm(nPat, muCov, sdCov, corCov, regCoeff, mix.phi = 1,
-  fmla = NULL, type = c("continuous", "binary"), ysig = NULL,
-  sig2Ratio = 1, b0 = NULL, bin.mu = 0.5, ...)
+  cov.breaks = NULL, fmla = NULL, type = c("continuous", "binary"),
+  ysig = NULL, sig2Ratio = 1, b0 = NULL, bin.mu = 0.5, ...)
 }
 \arguments{
 \item{nPat}{number of patients}
@@ -20,6 +20,10 @@ rweSimuSingleArm(nPat, muCov, sdCov, corCov, regCoeff, mix.phi = 1,
 \item{regCoeff}{regression coefficients}
 
 \item{mix.phi}{weight in mixture model}
+
+\item{cov.breaks}{breaks to cut covaraites into categories. If numeric, the
+same cuts will be applied to all covariates. If list, each covariates
+will be categorized based on its own breaks. If NULL, keep continuous.}
 
 \item{type}{distributions of the random error}
 

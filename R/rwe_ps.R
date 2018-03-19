@@ -4,12 +4,16 @@
 #'
 #' @export
 #'
-rwePS <- function(data, formula = NULL, v.grp = "group", v.covs = "V1", d1.grp = 1, nstrata = 5, ...) {
+rwePS <- function(data, ps.fml = NULL, v.grp = "group", v.covs = "V1", d1.grp = 1, nstrata = 5, ...) {
 
     dnames <- colnames(data);
     stopifnot(v.grp %in% dnames);
 
-    all.ps  <- get.ps(data, ps.fml = formula, ps.cov = v.covs, grp = v.grp, ...);
+    ## generate formula
+    if (is.null(ps.fml))
+        ps.fml <- as.formula(paste(grp, "~", paste(ps.cov, collapse="+"), sep=""));
+
+    all.ps  <- get.ps(data, ps.fml = ps.fml, ...);
     D1.ps   <- all.ps[which(d1.grp == data[[v.grp]])];
     cuts    <- quantile(D1.ps, seq(0, 1,length=nstrata+1));
     cuts[1] <- cuts[1] - 0.001;
@@ -26,9 +30,15 @@ rwePS <- function(data, formula = NULL, v.grp = "group", v.covs = "V1", d1.grp =
     data[["_ps_"]]     <- all.ps;
     data[["_strata_"]] <- strata;
     data[["_grp_"]]    <- grp;
-    class(data)        <- append(class(data),
-                                 get.rwe.class("DWITHPS"));
-    data
+
+
+    rst <- list(data    = data,
+                ps.fml  = ps.fml,
+                nstrata = nstrata);
+
+    class(rst) <- get.rwe.class("DWITHPS");
+
+    rst
 }
 
 #' Get number of subjects and the KL distance for each PS strata
@@ -41,23 +51,37 @@ rwePSKL <- function(data.withps, ...) {
     stopifnot(inherits(data.withps,
                        what = get.rwe.class("DWITHPS")));
 
-    nstrata <- max(data.withps[["_strata_"]], na.rm = TRUE);
+    dataps   <- data.withps$data;
+    nstrata  <- data.withps$nstrata;
     rst     <- NULL;
     for (i in 1:nstrata) {
-        ps0 <- data.withps[i == data.withps[["_strata_"]] &
-                           0 == data.withps[["_grp_"]],
+        ps0 <- dataps[which(i == dataps[["_strata_"]] &
+                                 0 == dataps[["_grp_"]]),
                            "_ps_"];
-        ps1 <- data.withps[i == data.withps[["_strata_"]] &
-                           1 == data.withps[["_grp_"]],
+        ps1 <- dataps[which(i == dataps[["_strata_"]] &
+                                 1 == dataps[["_grp_"]]),
                            "_ps_"];
+
+        if (0 == length(ps0) | 0 == length(ps1))
+            warning("No samples in strata");
+
+        if (any(is.na(c(ps0, ps1))))
+            warning("NA found in propensity scores in a strata");
 
         cur.kl <- rweKL(ps0, ps1, ...);
         rst    <- rbind(rst, c(i, cur.kl));
     }
 
+    ##overall
+    ps0        <- dataps[which(0 == dataps[["_grp_"]]), "_ps_"];
+    ps1        <- dataps[which(1 == dataps[["_grp_"]]), "_ps_"];
+    overall.kl <- rweKL(ps0, ps1);
+    rst        <- rbind(rst, c(0, overall.kl));
+
+
     colnames(rst) <- c("Strata", "N0", "N1", "KL");
     rst           <- data.frame(rst);
-    class(rst)    <- append(class(rst), get.rwe.class("PSKL"));
+    class(rst)    <- append(get.rwe.class("PSKL"), class(rst));
 
     rst
 }

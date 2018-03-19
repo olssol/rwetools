@@ -4,7 +4,7 @@
 \alias{rwePS}
 \title{Get propensity scores}
 \usage{
-rwePS(data, formula = NULL, v.grp = "group", v.covs = "V1", d1.grp = 1,
+rwePS(data, ps.fml = NULL, v.grp = "group", v.covs = "V1", d1.grp = 1,
   nstrata = 5, ...)
 }
 \arguments{

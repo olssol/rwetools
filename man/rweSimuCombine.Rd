@@ -4,7 +4,7 @@
 \alias{rweSimuCombine}
 \title{Combining simulation results}
 \usage{
-rweSimuCombine(lst.rst, fun = mean)
+rweSimuCombine(lst.rst, fun = mean, ignore.error = TRUE, ...)
 }
 \arguments{
 \item{lst.rst}{List of simulation results. Each element represents a
