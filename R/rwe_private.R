@@ -118,7 +118,7 @@ plotRwePs <- function(data.withps, overall.inc = TRUE, add.text = TRUE, facet.sc
     dtaps       <- data.withps$data;
 
     pskl$Strata <- as.factor(c(paste("Stratum ", 1:nstrata, sep = ""), "Overall"));
-    xlim        <- max(dtaps[which(!is.na(dtaps[["_strata_"]])),"_ps_"], na.rm = TRUE);
+    xlim        <- range(dtaps[which(!is.na(dtaps[["_strata_"]])),"_ps_"], na.rm = TRUE);
 
     all.data <- NULL;
     for (i in 1:nstrata) {
@@ -138,7 +138,6 @@ plotRwePs <- function(data.withps, overall.inc = TRUE, add.text = TRUE, facet.sc
     }
 
     all.data$Group <- as.factor(all.data$Group);
-
     rst <- ggplot(data = all.data, aes(x = Ps)) +
         geom_density(alpha = 0.2,
                        aes(group = Group,
@@ -149,7 +148,7 @@ plotRwePs <- function(data.withps, overall.inc = TRUE, add.text = TRUE, facet.sc
                      na.rm = TRUE) +
         labs(x = "Propensity Score", y = "Density") +
         scale_y_continuous(breaks = NULL) +
-        scale_x_continuous(limits = c(0, xlim)) +
+        scale_x_continuous(limits = xlim) +
         theme_bw() +
         theme(strip.background = element_blank(),
               panel.grid = element_blank(),
@@ -189,7 +188,6 @@ plot.balance.fac <- function(dtaps, v, overall.inc = TRUE) {
                      linetype = Group,
                      fill  = Group)) +
         scale_y_continuous(breaks = NULL, limits = c(0,1)) +
-        scale_x_discrete(breaks = NULL) +
         labs(x = "", y = "") +
         facet_grid(Strata ~ .);
     rst
@@ -224,7 +222,6 @@ plot.balance.cont <- function(dtaps, v, nstrata, overall.inc = TRUE, facet.scale
                          linetype = Group),
                      na.rm = TRUE) +
         scale_y_continuous(breaks = NULL) +
-        scale_x_continuous(breaks = NULL) +
         labs(x = "", y = "") +
         facet_grid(Strata ~ ., scales = facet.scales);
     rst
@@ -269,6 +266,6 @@ plotRweBalance <- function(data.withps, overall.inc = TRUE, v.cov = NULL,
     rst[[length(rst)]]     <- rst[[length(rst)]] + theme(strip.text = element_text(size=8),
                                                          legend.position = "right");
     rst$nrow               <- 1;
-    rst$rel_widths         <- c(rep(1, length(v.cov)-1), 2.5);
+    rst$rel_widths         <- c(rep(1, length(v.cov)-1), 1+0.08*length(v.cov));
     do.call(plot_grid, rst);
 }

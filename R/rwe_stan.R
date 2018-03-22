@@ -54,8 +54,10 @@ rweDrawPost <- function(data.ps, v.outcome = "Y", As=0, type = c("continuous", "
         cur.d1 <- data[data[["_strata_"]] == i & data[["_grp_"]] == 1, v.outcome];
         cur.d0 <- data[data[["_strata_"]] == i & data[["_grp_"]] == 0, v.outcome];
 
-        if (0 == length(cur.d1))
+        if (0 == length(cur.d1)) {
+            warning("Stratum contains no subjects from group 1");
             next;
+        }
 
         Y1 <- cur.d1;
         N1 <- length(cur.d1);

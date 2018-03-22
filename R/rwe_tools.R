@@ -1,3 +1,20 @@
+#' Cut a sequence of numbers into bins with equal numbers in each bin
+#'
+#'
+#' @export
+#'
+rweCut <- function(x, y=x, breaks = 5) {
+    cuts    <- quantile(x, seq(0, 1,length=breaks+1));
+    cuts[1] <- cuts[1] - 0.001;
+    rst     <- rep(NA, length(y));
+    for (i in 2:length(cuts)) {
+        inx      <- which(y > cuts[i-1] & y <= cuts[i]);
+        rst[inx] <- i-1;
+    }
+
+    rst
+}
+
 #' Get unbalance in baseline covariates
 #'
 #' @param diff If TRUE, get the difference in covariates between groups.
@@ -71,7 +88,7 @@ rweKL <- function(sample.F0, sample.F1, n.bins = 10, epsilon = 10^-6) {
         warning("Distribution for Kullback-Leibler distance calculation is degenerate.",
                 call. = FALSE);
     } else {
-        cut.smps <- as.numeric(cut(smps, breaks = n.bins));
+        cut.smps <- rweCut(smps, breaks = n.bins);
     }
 
     rst <- 0;
@@ -81,7 +98,6 @@ rweKL <- function(sample.F0, sample.F1, n.bins = 10, epsilon = 10^-6) {
 
         ep0  <- (n0.j+epsilon)/(n0 + epsilon * n.bins);
         ep1  <- (n1.j+epsilon)/(n1 + epsilon * n.bins);
-
         rst  <- rst + ep1 * log(ep1/ep0);
     }
 

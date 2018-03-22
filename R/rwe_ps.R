@@ -15,16 +15,9 @@ rwePS <- function(data, ps.fml = NULL, v.grp = "group", v.covs = "V1", d1.grp = 
 
     all.ps  <- get.ps(data, ps.fml = ps.fml, ...);
     D1.ps   <- all.ps[which(d1.grp == data[[v.grp]])];
-    cuts    <- quantile(D1.ps, seq(0, 1,length=nstrata+1));
-    cuts[1] <- cuts[1] - 0.001;
 
-    strata  <- rep(NA, nrow(data));
-    for (i in 2:length(cuts)) {
-        inx         <- which(all.ps > cuts[i-1] & all.ps <= cuts[i]);
-        strata[inx] <- i-1;
-    }
-
-    grp <- rep(1, nrow(data));
+    strata  <- rweCut(D1.ps, all.ps, breaks = nstrata);
+    grp     <- rep(1, nrow(data));
     grp[which(data[[v.grp]] != d1.grp)] <- 0;
 
     data[["_ps_"]]     <- all.ps;
@@ -46,7 +39,7 @@ rwePS <- function(data, ps.fml = NULL, v.grp = "group", v.covs = "V1", d1.grp = 
 #'
 #' @export
 #'
-rwePSKL <- function(data.withps, ...) {
+rwePSKL <- function(data.withps, n.bins = 10, ...) {
 
     stopifnot(inherits(data.withps,
                        what = get.rwe.class("DWITHPS")));
@@ -68,14 +61,14 @@ rwePSKL <- function(data.withps, ...) {
         if (any(is.na(c(ps0, ps1))))
             warning("NA found in propensity scores in a strata");
 
-        cur.kl <- rweKL(ps0, ps1, ...);
+        cur.kl <- rweKL(ps0, ps1, n.bins = n.bins, ...);
         rst    <- rbind(rst, c(i, cur.kl));
     }
 
     ##overall
     ps0        <- dataps[which(0 == dataps[["_grp_"]]), "_ps_"];
     ps1        <- dataps[which(1 == dataps[["_grp_"]]), "_ps_"];
-    overall.kl <- rweKL(ps0, ps1);
+    overall.kl <- rweKL(ps0, ps1, n.bins = nstrata*n.bins, ...);
     rst        <- rbind(rst, c(0, overall.kl));
 
 
