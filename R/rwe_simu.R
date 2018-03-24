@@ -82,6 +82,7 @@ rweXBeta <- function(..., regCoeff, cov.x = NULL, fmla = NULL) {
 rweGetYSig <- function(..., nPat=500000, xbeta = NULL, sig2Ratio = 1) {
     if (is.null(xbeta))
         xbeta   <- rweXBeta(nPat=nPat, ...);
+
     v.xbeta <- var(xbeta);
     ysig    <- sqrt(v.xbeta * sig2Ratio);
 
@@ -177,17 +178,9 @@ rweSimuSingleArm <- function(nPat, muCov, sdCov, corCov, regCoeff, mix.phi = 1, 
                                fmla       = fmla)[2];
         }
 
-        ## intercept = 0
-        regCoeff <- c(0, regCoeff);
-        XBETA    <- rweXBeta(cov.x    = COV.X,
-                             regCoeff = regCoeff,
-                             fmla     = fmla);
-
-        EPSILON <- rweSimuError(nPat,
-                                ysig = ysig,
-                                ...);
-
-        Y <- XBETA + EPSILON;
+        XBETA   <- rweXBeta(cov.x = COV.X, regCoeff = regCoeff, fmla = fmla);
+        EPSILON <- rweSimuError(nPat, ysig = ysig,...);
+        Y       <- XBETA + EPSILON;
     } else if ("binary" == type) {
         if (is.null(b0)) {
             stopifnot(!is.null(bin.mu));
@@ -202,11 +195,8 @@ rweSimuSingleArm <- function(nPat, muCov, sdCov, corCov, regCoeff, mix.phi = 1, 
         }
 
         regCoeff <- c(b0, regCoeff);
-        XBETA    <- rweXBeta(cov.x    = COV.X,
-                             regCoeff = regCoeff,
-                             fmla     = fmla);
-
-        Y <- rbinom(nPat, 1, expit(XBETA));
+        XBETA    <- rweXBeta(cov.x = COV.X, regCoeff = regCoeff, fmla = fmla);
+        Y        <- rbinom(nPat, 1, expit(XBETA));
     }
 
     ##return
@@ -278,70 +268,72 @@ rweSimuTwoArm <- function(nPat, muCov, sdCov, corCov,
 #'
 #' @export
 #'
-rweSimuFromTrial <- function(nPat,
-                             trial.data, group = "A", outcome = "Y",
-                             keep.group = TRUE,
-                             trt.effect = 0,
-                             with.replacement = FALSE,
-                             ratio.size = 1,
-                             seed = NULL) {
+rweSimuFromTrial <- function(nPat, trial.data, group = "A", outcome = "Y",
+                             with.replacement = TRUE, seed = NULL,
+                             permute = TRUE, f.subset = NULL,
+                             permute.trteffect = 0, permute.interaction = 0,
+                             simu.group = group, simu.outcome = outcome) {
     if (!is.null(seed))
         set.seed(seed);
 
     if (1 == length(nPat)) {
+        ## set the same sample size for the two groups
         nPat <- rep(nPat,2);
     }
 
-    if (keep.group) {
+    if (!permute) {
         arms   <- unique(trial.data[[group]]);
         rst    <- NULL;
         mean.y <- NULL;
         for (i in 1:length(arms)) {
             cur.d   <- trial.data[arms[i] == trial.data[[group]],];
-            mean.y  <- c(mean.y, mean(cur.d[[outcome]]));
-
             cur.n   <- nPat[min(i, length(nPat))];
-            cur.n   <- ceiling(cur.n * ratio.size);
 
-            if (nrow(cur.d) > cur.n) {
-                wr <- with.replacement;
-            } else {
-                wr <- TRUE;
-            }
-            cur.smp <- cur.d[sample(1:nrow(cur.d), cur.n, replace=wr), ];
-            cur.smp[[group]] <- i - 1;
+            stopifnot(with.replacement | nrow(cur.d) > cur.n);
+
+            mean.y   <- c(mean.y, mean(cur.d[[outcome]]));
+            cur.smp  <- cur.d[sample(1:nrow(cur.d), cur.n, replace=with.replacement), ];
+
+            cur.smp[[simu.group]]   <- i - 1;
+            cur.smp[[simu.outcome]] <- cur.d[[outcome]];
+
             rst <- rbind(rst, cur.smp);
         }
 
-        trt.effect <- mean.y[length(mean.y)] - mean.y[1];
+        trt.effect <- mean.y;
         simu.data  <- rst;
     } else {
         cur.d <- trial.data;
         cur.n <- sum(nPat);
-        cur.n <- ceiling(cur.n * ratio.size);
 
-        if (nrow(cur.d) > cur.n) {
-            wr <- with.replacement;
-        } else {
-            wr <- TRUE;
-        }
-        cur.smp <- cur.d[sample(1:nrow(cur.d), cur.n, replace=wr), ];
+        stopifnot(with.replacement | nrow(cur.d) > cur.n);
 
+        cur.smp <- cur.d[sample(1:nrow(cur.d), cur.n, replace=with.replacement), ];
+        grps    <- NULL;
         for (i in 1:length(nPat)) {
-            if (1 == i) {
-                tmp.start <- 1
-            } else {
-                tmp.start <- sum(nPat[1:(i-1)]);
-            }
+            grps <- c(grps, rep(i-1, nPat[i]));
+        }
+        cur.smp[[simu.group]]   <- grps;
+        cur.smp[[simu.outcome]] <- cur.smp[[outcome]];
 
-            tmp.end <- sum(nPat[1:i]);
-            cur.smp[tmp.start:tmp.end,group] <- i-1;
+        ##introduce main effect to the last group
+        inx.last <- which(max(grps) == grps);
+        cur.smp[inx.last, simu.outcome] <- permute.trteffect + cur.smp[inx.last, simu.outcome];
+
+        ##introduce interaction effect
+        if (is.function(f.subset) & permute.interaction != 0) {
+            subgrp <- f.subset(cur.smp);
+            stopifnot(all(subgrp %in% c(0,1)));
+            egbi   <- mean(subgrp);
+
+            inx.subgrp.last <- which(max(grps) == grps & 1 == subgrp);
+            if (0 < length(inx.subgrp.last)) {
+                cur.smp[inx.subgrp.last, simu.outcome] <- cur.smp[inx.subgrp.last, simu.outcome] +
+                    permute.interaction * (1 - egbi);
+            }
         }
 
-        last.arm <- (length(nPat)-1) == cur.smp[[group]];
-        cur.smp[last.arm, outcome] <- cur.smp[last.arm, outcome] + trt.effect;
-
-        trt.effect <- trt.effect;
+        trt.effect <- permute.trteffect;
         simu.data  <- cur.smp;
     }
 
