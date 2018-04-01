@@ -308,7 +308,8 @@ rweSimuFromTrial <- function(nPat, trial.data, group = "A", outcome = "Y",
 
         stopifnot(with.replacement | nrow(cur.d) > cur.n);
 
-        cur.smp <- cur.d[sample(1:nrow(cur.d), cur.n, replace=with.replacement), ];
+        smp.inx <- sample(1:nrow(cur.d), cur.n, replace=with.replacement);
+        cur.smp <- cur.d[smp.inx, ];
         grps    <- NULL;
         for (i in 1:length(nPat)) {
             grps <- c(grps, rep(i-1, nPat[i]));
@@ -325,14 +326,10 @@ rweSimuFromTrial <- function(nPat, trial.data, group = "A", outcome = "Y",
             all.subgrp <- f.subset(cur.d);
             stopifnot(all(all.subgrp %in% c(0,1)));
 
-            egbi            <- mean(all.subgrp);
-            subgrp          <- f.subset(cur.smp);
-            inx.subgrp.last <- which(max(grps) == grps & 1 == subgrp);
-
-            if (0 < length(inx.subgrp.last)) {
-                cur.smp[inx.subgrp.last, simu.outcome] <- cur.smp[inx.subgrp.last, simu.outcome] +
-                    permute.interaction * (1 - egbi);
-            }
+            egbi   <- mean(all.subgrp);
+            subgrp <- all.subgrp[smp.inx];
+            cur.smp[inx.last, simu.outcome] <- cur.smp[inx.last, simu.outcome] +
+                permute.interaction * (subgrp[inx.last] - egbi);
         }
 
         trt.effect <- permute.trteffect;
