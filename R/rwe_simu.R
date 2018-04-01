@@ -322,11 +322,13 @@ rweSimuFromTrial <- function(nPat, trial.data, group = "A", outcome = "Y",
 
         ##introduce interaction effect
         if (is.function(f.subset) & permute.interaction != 0) {
-            subgrp <- f.subset(cur.smp);
-            stopifnot(all(subgrp %in% c(0,1)));
-            egbi   <- mean(subgrp);
+            all.subgrp <- f.subset(cur.d);
+            stopifnot(all(all.subgrp %in% c(0,1)));
 
+            egbi            <- mean(all.subgrp);
+            subgrp          <- f.subset(cur.smp);
             inx.subgrp.last <- which(max(grps) == grps & 1 == subgrp);
+
             if (0 < length(inx.subgrp.last)) {
                 cur.smp[inx.subgrp.last, simu.outcome] <- cur.smp[inx.subgrp.last, simu.outcome] +
                     permute.interaction * (1 - egbi);
