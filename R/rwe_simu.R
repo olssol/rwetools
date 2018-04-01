@@ -211,16 +211,16 @@ rweSimuSingleArm <- function(nPat, muCov, sdCov, corCov, regCoeff, mix.phi = 1, 
 #'
 #' @export
 #'
-rweSimuTwoArm <- function(nPat, muCov, sdCov, corCov,
+rweSimuTwoArm <- function(nPat, muCov, sdCov, corCov, trt.effect = 0,
                           regCoeff.y, regCoeff.z=0,
                           mix.phi = 1, cov.breaks = NULL,
-                          fmla.y = NULL, fmla.z = NULL, ysig = NULL, b0 = NULL,
-                          sig2Ratio = 2, bin.mu = 0.5, ..., do.simu=TRUE) {
+                          fmla.y = NULL, fmla.z = NULL, ysig = NULL,
+                          b0 = NULL, z1.p = 0.5,
+                          sig2Ratio = 2,  ..., do.simu=TRUE) {
 
     ##treatment assignment
-    if (is.null(b0)) {
-        b0  <- rweGetBinInt(bin.mu,
-                            nPat     = nPat,
+    if (is.null(b0) & !identical(0, regCoeff.z)) {
+        b0  <- rweGetBinInt(z1.p,
                             muCov    = muCov,
                             sdCov    = sdCov,
                             corCov   = corCov,
@@ -230,35 +230,47 @@ rweSimuTwoArm <- function(nPat, muCov, sdCov, corCov,
     }
 
     if (is.null(ysig)) {
-        ysig <- rweGetYSig(sig2Ratio,
-                           nPat     = nPat,
-                           muCov    = muCov,
-                           sdCov    = sdCov,
-                           corCov   = corCov,
-                           regCoeff = regCoeff.y[-1],
-                           mix.phi  = mix.phi,
-                           fmla     = fmla.y);
+        ysig <- rweGetYSig(muCov      = muCov,
+                           sdCov      = sdCov,
+                           corCov     = corCov,
+                           mix.phi    = mix.phi,
+                           cov.breaks = cov.breaks,
+                           regCoeff   = regCoeff.y,
+                           sig2Ratio  = sig2Ratio,
+                           fmla       = fmla.y)[2];
     }
 
+    simu.data <- NULL;
     if (do.simu) {
         ##covariates
-        COV.X   <- rweSimuCov(nPat = nPat, muCov = muCov, sdCov = sdCov, corCov = corCov,
-                              mix.phi = mix.phi, cov.breaks = cov.breaks);
-        xbeta.z <- rweXBeta(cov.x    = COV.X,
-                            regCoeff = regCoeff.z,
-                            fmla     = fmla.z);
-        Z       <- rbinom(nPat, 1, expit(b0+xbeta.z));
+        COV.X   <- rweSimuCov(nPat       = nPat,
+                              muCov      = muCov,
+                              sdCov      = sdCov,
+                              corCov     = corCov,
+                              mix.phi    = mix.phi,
+                              cov.breaks = cov.breaks);
+
+        if (identical(0, regCoeff.z)) {
+            Z  <- rbinom(nPat, 1, z1.p);
+        } else {
+            xbeta.z <- rweXBeta(cov.x    = COV.X,
+                                regCoeff = regCoeff.z,
+                                fmla     = fmla.z);
+            Z       <- rbinom(nPat, 1, expit(b0 + xbeta.z));
+        }
+
         xbeta.y <- rweXBeta(cov.x    = COV.X,
-                            regCoeff = regCoeff.y[-1],
+                            regCoeff = regCoeff.y,
                             fmla     = fmla.y);
+
         epsilon.y <- rweSimuError(nPat, ysig = ysig, ...);
-        Y         <- Z * regCoeff.y[1] + xbeta.y + epsilon.y;
-        ##return
-        rst       <- cbind(pid=1:nPat, Y=Y, Z=Z, COV.X);
-    } else {
-        rst <- c(b0=b0, ysig=ysig);
+        Y         <- Z * trt.effect + xbeta.y + epsilon.y;
+        simu.data <- cbind(pid=1:nPat, Y=Y, Z=Z, COV.X);
     }
-    rst
+
+    list(true.effect = trt.effect,
+         simu.data   = simu.data,
+         b0ysig      = c(b0, ysig));
 }
 
 #' Simulate data from an existing dataset
