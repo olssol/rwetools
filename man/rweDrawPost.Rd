@@ -4,11 +4,11 @@
 \alias{rweDrawPost}
 \title{Get Posterior for all stratum}
 \usage{
-rweDrawPost(data, v.outcome = "Y", As = 0, type = c("continuous",
+rweDrawPost(data.ps, v.outcome = "Y", As = 0, type = c("continuous",
   "binary"), ...)
 }
 \arguments{
-\item{data}{class DWITHPS data frame}
+\item{data.ps}{class DWITHPS data frame}
 
 \item{As}{power of the power prior for each strata}
 

@@ -4,10 +4,10 @@
 \alias{rweSimuTwoArm}
 \title{Simulate continuous outcomes for a two arm study}
 \usage{
-rweSimuTwoArm(nPat, muCov, sdCov, corCov, regCoeff.y, regCoeff.z = 0,
-  mix.phi = 1, cov.breaks = NULL, fmla.y = NULL, fmla.z = NULL,
-  ysig = NULL, b0 = NULL, sig2Ratio = 2, bin.mu = 0.5, ...,
-  do.simu = TRUE)
+rweSimuTwoArm(nPat, muCov, sdCov, corCov, trt.effect = 0, regCoeff.y,
+  regCoeff.z = 0, mix.phi = 1, cov.breaks = NULL, fmla.y = NULL,
+  fmla.z = NULL, ysig = NULL, b0 = NULL, z1.p = 0.5, sig2Ratio = 2,
+  ..., do.simu = TRUE)
 }
 \arguments{
 \item{nPat}{number of patients}
@@ -27,8 +27,6 @@ will be categorized based on its own breaks. If NULL, keep continuous.}
 \item{ysig}{standard error of the random error}
 
 \item{b0}{intercept in regession model}
-
-\item{bin.mu}{mean of the binary outcomes used to compute b0}
 }
 \description{
 Simulate continuous outcomes for a two arm study

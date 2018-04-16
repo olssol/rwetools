@@ -4,7 +4,7 @@
 \alias{rwePSKL}
 \title{Get number of subjects and the KL distance for each PS strata}
 \usage{
-rwePSKL(data.withps, ...)
+rwePSKL(data.withps, n.bins = 10, ...)
 }
 \description{
 Get number of subjects and the KL distance for each PS strata

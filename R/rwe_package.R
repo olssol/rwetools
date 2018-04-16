@@ -13,7 +13,7 @@
 #'
 #' @importFrom loo       extract_log_lik loo
 #' @importFrom parallel  detectCores
-#' @importFrom MCMCpack  rdirichlet
+# #' @importFrom MCMCpack  rdirichlet
 #' @importFrom mvtnorm   rmvnorm
 #' @importFrom cowplot   plot_grid
 #' @importFrom dplyr %>% group_by_ group_by summarize mutate count_ mutate_if rename_ filter

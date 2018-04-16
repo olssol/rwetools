@@ -5,8 +5,9 @@
 \title{Simulate data from an existing dataset}
 \usage{
 rweSimuFromTrial(nPat, trial.data, group = "A", outcome = "Y",
-  keep.group = TRUE, trt.effect = 0, with.replacement = FALSE,
-  ratio.size = 1, seed = NULL)
+  with.replacement = TRUE, seed = NULL, permute = TRUE, f.subset = NULL,
+  permute.trteffect = 0, permute.interaction = 0, simu.group = group,
+  simu.outcome = outcome)
 }
 \arguments{
 \item{nPat}{number of patients}
@@ -16,8 +17,6 @@ rweSimuFromTrial(nPat, trial.data, group = "A", outcome = "Y",
 \item{group}{column referring to arm in the existing dataset}
 
 \item{outcome}{column referring to outcome in the existing dataset}
-
-\item{keep.group}{sample ignore arm assignment in the existing dataset}
 
 \item{with.replacement}{sample with or without replacement from the existing
 dataset}
