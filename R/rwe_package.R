@@ -5,10 +5,6 @@
 #' @aliases   rwetools
 #' @useDynLib rwetools, .registration = TRUE
 #'
-#' @import stats
-#' @import Rcpp
-#' @import methods
-#' @import ggplot2
 #'
 #' @importFrom rstan         sampling extract stanc rstan_options traceplot stan_rhat
 #' @importFrom randomForest  randomForest
@@ -20,8 +16,12 @@
 #' @importFrom mvtnorm   rmvnorm
 #' @importFrom cowplot   plot_grid
 #' @importFrom dplyr     %>% group_by_ group_by summarize mutate count_ mutate_if rename_ filter
-# #' @importFrom MCMCpack  rdirichlet
+## #' @importFrom MCMCpack  rdirichlet
 #'
+#' @import stats
+#' @import Rcpp
+#' @import methods
+#' @import ggplot2
 #'
 #' @description
 #'

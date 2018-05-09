@@ -1,29 +1,24 @@
 Package: rwetools 
 Title: R functions for synthesizing real-world evidence in single-arm studies
-Version: 1.5
+Version: 2.0
 Author: Chenguang Wang [aut, cre]
         Trustees of Columbia University [cph] (tools/make_cpp.R, R/stanmodels.R)
 Maintainer: Chenguang Wang <chenguang.wang.0517@gmail.com>
 Description: R functions for synthesizing real-world evidence in single-arm studies.
-Depends:
-    R (>= 3.3.0),
-    Rcpp (>= 0.12.5)
+Depends: R (>= 3.4.0), Rcpp (>= 0.12.16), methods
 License: GPL (>= 3)
-LinkingTo: StanHeaders (>= 2.11.0), rstan (>= 2.14), BH (>= 1.60.0), Rcpp (>=
-    0.11.0), RcppEigen
+LinkingTo: StanHeaders (>= 2.17.2), rstan (>= 2.17.3), BH (>= 1.66.0-1), Rcpp (>= 0.12.16), RcppEigen (>= 0.3.3.4.0)
 RcppModules: stan_fit4powerp_mod, stan_fit4powerpbinary_mod
-Imports:
-    sqldf    (>= 0.4),
-    parallel (>= 3.2),
-    rstan    (>= 2.17),
-    randomForest (>= 4.6),
-    methods,
+Imports: rstan (>= 2.17.3), rstantools (>= 1.5.0), parallel (>= 3.2), randomForest (>= 4.6),
     cowplot,
     dplyr,
     ggplot2,
     mvtnorm
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 6.0.1
+ByteCompile: true
+SystemRequirements: GNU make
+NeedsCompilation: yes
 Suggests: knitr
+RoxygenNote: 6.0.1
 VignetteBuilder: knitr

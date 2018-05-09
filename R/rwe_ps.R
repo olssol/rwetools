@@ -83,24 +83,25 @@ rwePSDist <- function(data.withps, n.bins = 10, type = c("ovl", "kl"), ...) {
 
 #' Get the actual power term in the power prior
 #'
+#' @param psdist      A RWE_PSDIST type object
 #' @param a           power term
 #' @param overall.ess ratio of overall added number of patients to N1
 #' @param adjust.size whether adjust for sizes in group 0 and 1 in the power term
-#' @param adjust.kl   whether adjust for KL distance in ps scores in the power term
+#' @param adjust.dist whether adjust for distance in ps scores in the power term
 #'
 #' @export
 #'
-rweGetPowerA <- function(pskl, a = NULL, overall.ess = 0.3, adjust.size = TRUE, adjust.kl = TRUE) {
+rweGetPowerA <- function(psdist, a = NULL, overall.ess = 0.3, adjust.size = TRUE, adjust.dist = TRUE) {
 
-    stopifnot(inherits(pskl, what = get.rwe.class("PSDIST")));
+    stopifnot(inherits(psdist, what = get.rwe.class("PSDIST")));
 
     ## compute a
     if (is.null(a)) {
         stopifnot(1 == adjust.size);
         stopifnot(overall.ess >= 0);
 
-        if (1 == adjust.kl) {
-            a <- overall.ess * (1 + mean(pskl$KL));
+        if (1 == adjust.dist) {
+            a <- overall.ess / mean(psdist$Dist);
         } else {
             a <- overall.ess;
         }
@@ -108,13 +109,13 @@ rweGetPowerA <- function(pskl, a = NULL, overall.ess = 0.3, adjust.size = TRUE, 
 
 
     ## compute as, power term for each strata
-    rst <- rep(a, nrow(pskl));
+    rst <- rep(a, nrow(psdist));
     if (1 == adjust.size) {
-        rst <- rst * pskl$N1 / pskl$N0;
+        rst <- rst * psdist$N1 / psdist$N0;
     }
 
-    if (1 == adjust.kl) {
-        rst <- rst / (1 + pskl$KL)
+    if (1 == adjust.dist) {
+        rst <- rst * psdist$Dist;
     }
 
     list(a  = a,

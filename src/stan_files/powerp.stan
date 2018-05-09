@@ -25,7 +25,7 @@ model {
 
   //likelihood
   if (N0 > 0) {
-    target +=  normal_lpdf(Y0 | theta, tau0) * A;    
+    target +=  normal_lpdf(Y0 | theta, tau0) * A;
   }
 
   target +=  normal_lpdf(Y1 | theta, tau1);
