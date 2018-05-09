@@ -34,15 +34,17 @@ rwePS <- function(data, ps.fml = NULL, v.grp = "group", v.covs = "V1", d1.grp = 
     rst
 }
 
-#' Get number of subjects and the KL distance for each PS strata
+#' Get number of subjects and the distances of PS distributions for each PS
+#' strata
 #'
 #'
 #' @export
 #'
-rwePSKL <- function(data.withps, n.bins = 10, ...) {
-
+rwePSDist <- function(data.withps, n.bins = 10, type = c("ovl", "kl"), ...) {
     stopifnot(inherits(data.withps,
                        what = get.rwe.class("DWITHPS")));
+
+    type <- match.arg(type);
 
     dataps   <- data.withps$data;
     nstrata  <- data.withps$nstrata;
@@ -61,20 +63,20 @@ rwePSKL <- function(data.withps, n.bins = 10, ...) {
         if (any(is.na(c(ps0, ps1))))
             warning("NA found in propensity scores in a strata");
 
-        cur.kl <- rweKL(ps0, ps1, n.bins = n.bins, ...);
-        rst    <- rbind(rst, c(i, cur.kl));
+        cur.dist <- rweDist(ps0, ps1, n.bins = n.bins, type = type, ...);
+        rst      <- rbind(rst, c(i, cur.dist));
     }
 
     ##overall
     ps0        <- dataps[which(0 == dataps[["_grp_"]]), "_ps_"];
     ps1        <- dataps[which(1 == dataps[["_grp_"]]), "_ps_"];
-    overall.kl <- rweKL(ps0, ps1, n.bins = nstrata*n.bins, ...);
-    rst        <- rbind(rst, c(0, overall.kl));
+    all.dist   <- rweDist(ps0, ps1, n.bins = nstrata*n.bins, type = type, ...);
+    rst        <- rbind(rst, c(0, all.dist));
 
 
-    colnames(rst) <- c("Strata", "N0", "N1", "KL");
+    colnames(rst) <- c("Strata", "N0", "N1", "Dist");
     rst           <- data.frame(rst);
-    class(rst)    <- append(get.rwe.class("PSKL"), class(rst));
+    class(rst)    <- append(get.rwe.class("PSDIST"), class(rst));
 
     rst
 }
@@ -90,7 +92,7 @@ rwePSKL <- function(data.withps, n.bins = 10, ...) {
 #'
 rweGetPowerA <- function(pskl, a = NULL, overall.ess = 0.3, adjust.size = TRUE, adjust.kl = TRUE) {
 
-    stopifnot(inherits(pskl, what = get.rwe.class("PSKL")));
+    stopifnot(inherits(pskl, what = get.rwe.class("PSDIST")));
 
     ## compute a
     if (is.null(a)) {

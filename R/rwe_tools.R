@@ -68,16 +68,22 @@ rweUnbalance <- function(nPat, ..., pts = NULL, covs = NULL, diff = TRUE,
 }
 
 
-#' Compute Kullback-Leibler distance from F0 to F1
+#' Compute distance from F0 to F1
 #'
+#' @param type type of distances. ovl: overlapping coefficient, kl:
+#'     1/(1+Kullback-Leibler divergence)
 #' @param n.bins number of bins for KL computation
 #' @param epsilon small integer for Dirichlet smoothing
 #'
 #' @return a vector with the number of samples in group 0, the number of samples
-#'     in group 1, and the KL divergence from group 0 to group 1
+#'     in group 1, and 1/(1+KL divergence) from group 0 to group 1 when type is
+#'     kl, or the overlapping coefficient when type is ovl
 #' @export
 #'
-rweKL <- function(sample.F0, sample.F1, n.bins = 10, epsilon = 10^-6) {
+rweDist <- function(sample.F0, sample.F1, n.bins = 10, type = c("kl", "ovl"), epsilon = 10^-6) {
+
+    type     <- match.arg(type);
+
     smps     <- c(sample.F0, sample.F1);
     n0       <- length(sample.F0);
     n1       <- length(sample.F1);
@@ -85,7 +91,7 @@ rweKL <- function(sample.F0, sample.F1, n.bins = 10, epsilon = 10^-6) {
     if (1 == length(unique(smps))) {
         cut.smps <- rep(1, n0+n1)
         n.bins   <- 1;
-        warning("Distribution for Kullback-Leibler distance calculation is degenerate.",
+        warning("Distributions for computing distances are degenerate.",
                 call. = FALSE);
     } else {
         cut.smps <- rweCut(smps, breaks = n.bins);
@@ -96,10 +102,15 @@ rweKL <- function(sample.F0, sample.F1, n.bins = 10, epsilon = 10^-6) {
         n0.j <- length(which(j == cut.smps[1:n0]));
         n1.j <- length(which(j == cut.smps[(n0+1):(n0+n1)]));
 
-        ep0  <- (n0.j+epsilon)/(n0 + epsilon * n.bins);
-        ep1  <- (n1.j+epsilon)/(n1 + epsilon * n.bins);
-        rst  <- rst + ep1 * log(ep1/ep0);
+        rst  <- rst + switch(type,
+                             kl = {ep0  <- (n0.j+epsilon)/(n0 + epsilon * n.bins);
+                          ep1  <- (n1.j+epsilon)/(n1 + epsilon * n.bins);
+                          ep1 * log(ep1/ep0)},
+                          ovl = min(n0.j/n0, n1.j/n1));
     }
+
+    if ("kl" == type)
+        rst <- 1/(1+rst);
 
     c(n0,n1,rst);
 }

@@ -1,11 +1,11 @@
 ##----------------------------------------------------------------------------
 ##                SETTING
 ##----------------------------------------------------------------------------
-get.rwe.class <- function(c.str = c("DWITHPS", "PSKL")) {
+get.rwe.class <- function(c.str = c("DWITHPS", "PSDIST")) {
     c.str <- match.arg(c.str);
     switch(c.str,
            DWITHPS = "RWE_DWITHPS",
-           PSKL    = "RWE_PSKL");
+           PSDIST  = "RWE_PSDIST");
 }
 
 
@@ -234,10 +234,14 @@ plot.balance.cont <- function(dtaps, v, nstrata, overall.inc = TRUE, facet.scale
 
 
 plotRweBalance <- function(data.withps, overall.inc = TRUE, v.cov = NULL,
-                           facet.scales = "free_y", ...) {
+                           facet.scales = "free_y", label.cov = v.cov, legend.width = 0.08,
+                           ...) {
 
     if (is.null(v.cov))
         v.cov <- all.vars(data.withps$ps.fml)[-1];
+
+    if (is.null(label.cov))
+        label.cov <- v.cov;
 
     nstrata      <- data.withps$nstrata;
     dtaps        <- data.withps$data;
@@ -253,7 +257,7 @@ plotRweBalance <- function(data.withps, overall.inc = TRUE, v.cov = NULL,
                                        overall.inc = overall.inc, facet.scales = facet.scales);
         }
         cur.p <- cur.p +
-            labs(title = v) +
+            labs(title = label.cov[v == v.cov]) +
             theme_bw() +
             theme(strip.background = element_blank(),
                   strip.placement  = "right",
@@ -271,6 +275,6 @@ plotRweBalance <- function(data.withps, overall.inc = TRUE, v.cov = NULL,
     rst[[length(rst)]]     <- rst[[length(rst)]] + theme(strip.text = element_text(size=8),
                                                          legend.position = "right");
     rst$nrow               <- 1;
-    rst$rel_widths         <- c(rep(1, length(v.cov)-1), 1+0.08*length(v.cov));
+    rst$rel_widths         <- c(rep(1, length(v.cov)-1), 1+legend.width*length(v.cov));
     do.call(plot_grid, rst);
 }

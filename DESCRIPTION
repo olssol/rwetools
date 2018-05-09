@@ -17,9 +17,13 @@ Imports:
     parallel (>= 3.2),
     rstan    (>= 2.17),
     randomForest (>= 4.6),
-    methods
+    methods,
+    cowplot,
+    dplyr,
+    ggplot2,
+    mvtnorm
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 6.0.1
-Suggests:
+Suggests: knitr
 VignetteBuilder: knitr
