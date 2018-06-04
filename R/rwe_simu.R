@@ -193,7 +193,6 @@ rweSimuSingleArm <- function(nPat, muCov, sdCov, corCov, regCoeff, mix.phi = 1, 
                                 cov.breaks = cov.breaks,
                                 fmla       = fmla);
         }
-
         regCoeff <- c(b0, regCoeff);
         XBETA    <- rweXBeta(cov.x = COV.X, regCoeff = regCoeff, fmla = fmla);
         Y        <- rbinom(nPat, 1, expit(XBETA));

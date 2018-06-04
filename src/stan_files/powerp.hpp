@@ -40,18 +40,20 @@ static int current_statement_begin__;
 stan::io::program_reader prog_reader__() {
     stan::io::program_reader reader;
     reader.add_event(0, 0, "start", "model_powerp");
-    reader.add_event(32, 32, "end", "model_powerp");
+    reader.add_event(41, 41, "end", "model_powerp");
     return reader;
 }
 
 #include <meta_header.hpp>
  class model_powerp : public prob_grad {
 private:
-    double A;
     int N0;
-    int N1;
-    vector<double> Y0;
+    double YBAR0;
+    double SD0;
+    int TN1;
     vector<double> Y1;
+    double A;
+    double a0;
 public:
     model_powerp(stan::io::var_context& context__,
         std::ostream* pstream__ = 0)
@@ -86,12 +88,6 @@ public:
 
         // initialize member variables
         try {
-            current_statement_begin__ = 7;
-            context__.validate_dims("data initialization", "A", "double", context__.to_vec());
-            A = double(0);
-            vals_r__ = context__.vals_r("A");
-            pos__ = 0;
-            A = vals_r__[pos__++];
             current_statement_begin__ = 8;
             context__.validate_dims("data initialization", "N0", "int", context__.to_vec());
             N0 = int(0);
@@ -99,55 +95,70 @@ public:
             pos__ = 0;
             N0 = vals_i__[pos__++];
             current_statement_begin__ = 9;
-            context__.validate_dims("data initialization", "N1", "int", context__.to_vec());
-            N1 = int(0);
-            vals_i__ = context__.vals_i("N1");
+            context__.validate_dims("data initialization", "YBAR0", "double", context__.to_vec());
+            YBAR0 = double(0);
+            vals_r__ = context__.vals_r("YBAR0");
             pos__ = 0;
-            N1 = vals_i__[pos__++];
+            YBAR0 = vals_r__[pos__++];
             current_statement_begin__ = 10;
-            validate_non_negative_index("Y0", "N0", N0);
-            context__.validate_dims("data initialization", "Y0", "double", context__.to_vec(N0));
-            validate_non_negative_index("Y0", "N0", N0);
-            Y0 = std::vector<double>(N0,double(0));
-            vals_r__ = context__.vals_r("Y0");
+            context__.validate_dims("data initialization", "SD0", "double", context__.to_vec());
+            SD0 = double(0);
+            vals_r__ = context__.vals_r("SD0");
             pos__ = 0;
-            size_t Y0_limit_0__ = N0;
-            for (size_t i_0__ = 0; i_0__ < Y0_limit_0__; ++i_0__) {
-                Y0[i_0__] = vals_r__[pos__++];
-            }
-            current_statement_begin__ = 11;
-            validate_non_negative_index("Y1", "N1", N1);
-            context__.validate_dims("data initialization", "Y1", "double", context__.to_vec(N1));
-            validate_non_negative_index("Y1", "N1", N1);
-            Y1 = std::vector<double>(N1,double(0));
+            SD0 = vals_r__[pos__++];
+            current_statement_begin__ = 13;
+            context__.validate_dims("data initialization", "TN1", "int", context__.to_vec());
+            TN1 = int(0);
+            vals_i__ = context__.vals_i("TN1");
+            pos__ = 0;
+            TN1 = vals_i__[pos__++];
+            current_statement_begin__ = 14;
+            validate_non_negative_index("Y1", "TN1", TN1);
+            context__.validate_dims("data initialization", "Y1", "double", context__.to_vec(TN1));
+            validate_non_negative_index("Y1", "TN1", TN1);
+            Y1 = std::vector<double>(TN1,double(0));
             vals_r__ = context__.vals_r("Y1");
             pos__ = 0;
-            size_t Y1_limit_0__ = N1;
+            size_t Y1_limit_0__ = TN1;
             for (size_t i_0__ = 0; i_0__ < Y1_limit_0__; ++i_0__) {
                 Y1[i_0__] = vals_r__[pos__++];
             }
+            current_statement_begin__ = 17;
+            context__.validate_dims("data initialization", "A", "double", context__.to_vec());
+            A = double(0);
+            vals_r__ = context__.vals_r("A");
+            pos__ = 0;
+            A = vals_r__[pos__++];
 
             // validate, data variables
-            current_statement_begin__ = 7;
-            check_greater_or_equal(function__,"A",A,0);
-            check_less_or_equal(function__,"A",A,1);
             current_statement_begin__ = 8;
+            check_greater_or_equal(function__,"N0",N0,1);
             current_statement_begin__ = 9;
             current_statement_begin__ = 10;
-            current_statement_begin__ = 11;
+            check_greater_or_equal(function__,"SD0",SD0,0);
+            current_statement_begin__ = 13;
+            check_greater_or_equal(function__,"TN1",TN1,1);
+            current_statement_begin__ = 14;
+            current_statement_begin__ = 17;
+            check_greater_or_equal(function__,"A",A,0);
             // initialize data variables
+            current_statement_begin__ = 21;
+            a0 = double(0);
+            stan::math::fill(a0,DUMMY_VAR__);
 
+            current_statement_begin__ = 22;
+            stan::math::assign(a0, (logical_lt(1,(A / N0)) ? stan::math::promote_scalar<double>(1) : stan::math::promote_scalar<double>((A / N0)) ));
 
             // validate transformed data
+            current_statement_begin__ = 21;
+            check_greater_or_equal(function__,"a0",a0,0);
 
             // validate, set parameter ranges
             num_params_r__ = 0U;
             param_ranges_i__.clear();
-            current_statement_begin__ = 15;
+            current_statement_begin__ = 26;
             ++num_params_r__;
-            current_statement_begin__ = 16;
-            ++num_params_r__;
-            current_statement_begin__ = 17;
+            current_statement_begin__ = 27;
             ++num_params_r__;
         } catch (const std::exception& e) {
             stan::lang::rethrow_located(e, current_statement_begin__, prog_reader__());
@@ -180,19 +191,6 @@ public:
             writer__.scalar_unconstrain(theta);
         } catch (const std::exception& e) { 
             throw std::runtime_error(std::string("Error transforming variable theta: ") + e.what());
-        }
-
-        if (!(context__.contains_r("tau0")))
-            throw std::runtime_error("variable tau0 missing");
-        vals_r__ = context__.vals_r("tau0");
-        pos__ = 0U;
-        context__.validate_dims("initialization", "tau0", "double", context__.to_vec());
-        double tau0(0);
-        tau0 = vals_r__[pos__++];
-        try {
-            writer__.scalar_lb_unconstrain(0,tau0);
-        } catch (const std::exception& e) { 
-            throw std::runtime_error(std::string("Error transforming variable tau0: ") + e.what());
         }
 
         if (!(context__.contains_r("tau1")))
@@ -246,13 +244,6 @@ public:
             else
                 theta = in__.scalar_constrain();
 
-            T__ tau0;
-            (void) tau0;  // dummy to suppress unused var warning
-            if (jacobian__)
-                tau0 = in__.scalar_lb_constrain(0,lp__);
-            else
-                tau0 = in__.scalar_lb_constrain(0);
-
             T__ tau1;
             (void) tau1;  // dummy to suppress unused var warning
             if (jacobian__)
@@ -272,20 +263,18 @@ public:
 
             // model body
 
-            current_statement_begin__ = 22;
+            current_statement_begin__ = 32;
             lp_accum__.add(normal_log<propto__>(theta, 0, 1000));
-            current_statement_begin__ = 23;
-            lp_accum__.add(cauchy_log<propto__>(tau0, 0, 2.5));
-            current_statement_begin__ = 24;
+            current_statement_begin__ = 33;
             lp_accum__.add(cauchy_log<propto__>(tau1, 0, 2.5));
-            current_statement_begin__ = 27;
+            current_statement_begin__ = 36;
             if (as_bool(logical_gt(N0,0))) {
 
-                current_statement_begin__ = 28;
-                lp_accum__.add((normal_log(Y0,theta,tau0) * A));
+                current_statement_begin__ = 37;
+                lp_accum__.add((normal_log(YBAR0,theta,(SD0 / N0)) * a0));
             }
-            current_statement_begin__ = 31;
-            lp_accum__.add(normal_log(Y1,theta,tau1));
+            current_statement_begin__ = 40;
+            lp_accum__.add(normal_log<propto__>(Y1, theta, tau1));
 
         } catch (const std::exception& e) {
             stan::lang::rethrow_located(e, current_statement_begin__, prog_reader__());
@@ -313,7 +302,6 @@ public:
     void get_param_names(std::vector<std::string>& names__) const {
         names__.resize(0);
         names__.push_back("theta");
-        names__.push_back("tau0");
         names__.push_back("tau1");
     }
 
@@ -321,8 +309,6 @@ public:
     void get_dims(std::vector<std::vector<size_t> >& dimss__) const {
         dimss__.resize(0);
         std::vector<size_t> dims__;
-        dims__.resize(0);
-        dimss__.push_back(dims__);
         dims__.resize(0);
         dimss__.push_back(dims__);
         dims__.resize(0);
@@ -343,10 +329,8 @@ public:
         (void) function__;  // dummy to suppress unused var warning
         // read-transform, write parameters
         double theta = in__.scalar_constrain();
-        double tau0 = in__.scalar_lb_constrain(0);
         double tau1 = in__.scalar_lb_constrain(0);
         vars__.push_back(theta);
-        vars__.push_back(tau0);
         vars__.push_back(tau1);
 
         if (!include_tparams__) return;
@@ -412,9 +396,6 @@ public:
         param_name_stream__ << "theta";
         param_names__.push_back(param_name_stream__.str());
         param_name_stream__.str(std::string());
-        param_name_stream__ << "tau0";
-        param_names__.push_back(param_name_stream__.str());
-        param_name_stream__.str(std::string());
         param_name_stream__ << "tau1";
         param_names__.push_back(param_name_stream__.str());
 
@@ -430,9 +411,6 @@ public:
         std::stringstream param_name_stream__;
         param_name_stream__.str(std::string());
         param_name_stream__ << "theta";
-        param_names__.push_back(param_name_stream__.str());
-        param_name_stream__.str(std::string());
-        param_name_stream__ << "tau0";
         param_names__.push_back(param_name_stream__.str());
         param_name_stream__.str(std::string());
         param_name_stream__ << "tau1";

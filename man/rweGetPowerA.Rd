@@ -4,17 +4,19 @@
 \alias{rweGetPowerA}
 \title{Get the actual power term in the power prior}
 \usage{
-rweGetPowerA(pskl, a = NULL, overall.ess = 0.3, adjust.size = TRUE,
-  adjust.kl = TRUE)
+rweGetPowerA(psdist, a = NULL, overall.ess = 0.3, adjust.size = TRUE,
+  adjust.dist = TRUE)
 }
 \arguments{
+\item{psdist}{A RWE_PSDIST type object}
+
 \item{a}{power term}
 
 \item{overall.ess}{ratio of overall added number of patients to N1}
 
 \item{adjust.size}{whether adjust for sizes in group 0 and 1 in the power term}
 
-\item{adjust.kl}{whether adjust for KL distance in ps scores in the power term}
+\item{adjust.dist}{whether adjust for distance in ps scores in the power term}
 }
 \description{
 Get the actual power term in the power prior

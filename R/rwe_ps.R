@@ -4,7 +4,12 @@
 #'
 #' @export
 #'
-rwePS <- function(data, ps.fml = NULL, v.grp = "group", v.covs = "V1", d1.grp = 1, nstrata = 5, ...) {
+rwePS <- function(data, ps.fml = NULL,
+                  v.grp = "group",
+                  v.covs = "V1",
+                  d1.grp = 1,
+                  nstrata = 5, ...,
+                  caliper = 0) {
 
     dnames <- colnames(data);
     stopifnot(v.grp %in% dnames);
@@ -16,6 +21,15 @@ rwePS <- function(data, ps.fml = NULL, v.grp = "group", v.covs = "V1", d1.grp = 
     all.ps  <- get.ps(data, ps.fml = ps.fml, ...);
     D1.ps   <- all.ps[which(d1.grp == data[[v.grp]])];
 
+    ## add caliper width
+    if (caliper > 0) {
+        lgt.d1.ps  <- log(D1.ps/(1-D1.ps));
+        sd.lgt     <- sd(lgt.d1.ps[!is.infinite(lgt.d1.ps)]);
+        D1.ps[which.min(D1.ps)] <- expit(min(lgt.d1.ps) - sd.lgt * caliper);
+        D1.ps[which.max(D1.ps)] <- expit(max(lgt.d1.ps) + sd.lgt * caliper);
+    }
+
+    ## stratification
     strata  <- rweCut(D1.ps, all.ps, breaks = nstrata);
     grp     <- rep(1, nrow(data));
     grp[which(data[[v.grp]] != d1.grp)] <- 0;
