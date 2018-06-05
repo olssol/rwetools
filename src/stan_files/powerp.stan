@@ -19,7 +19,10 @@ data {
 
 transformed data {
   real<lower = 0> a0;
-  a0 = 1 < A/N0 ? 1 : A/N0;
+  real<lower = 0> sn0;
+
+  a0  = 1 < A/N0 ? 1 : A/N0;
+  sn0 = SD0/sqrt(N0*1.0);
 }
 
 parameters {
@@ -34,7 +37,7 @@ model {
 
   //likelihood
   if (N0 > 0) {
-    target +=  normal_lpdf(YBAR0 | theta, SD0/N0) * a0;
+    target +=  normal_lpdf(YBAR0 | theta, sn0) * a0;
   }
 
   Y1 ~ normal(theta, tau1);
