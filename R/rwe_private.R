@@ -118,7 +118,7 @@ plotRwePs <- function(data.withps, overall.inc = TRUE, add.text = TRUE, facet.sc
     stopifnot(inherits(data.withps,
                        what = get.rwe.class("DWITHPS")));
 
-    pskl        <- rwePSKL(data.withps, ...);
+    pskl        <- rwePSDist(data.withps, ...);
     nstrata     <- data.withps$nstrata;
     dtaps       <- data.withps$data;
 
@@ -166,7 +166,7 @@ plotRwePs <- function(data.withps, overall.inc = TRUE, add.text = TRUE, facet.sc
             geom_text(x = Inf, y = Inf, hjust = 1, vjust = 1,
                       aes(label = paste('N0=', N0,
                                         ", N1=", N1,
-                                        ", KL=", format(KL, digits = 3),
+                                        ", OVL=", format(Dist, digits = 3),
                                         sep = "")),
                       data = pskl, size = 4);
     }
