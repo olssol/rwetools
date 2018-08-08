@@ -108,13 +108,14 @@ rweGetBinInt <- function(..., regCoeff, nPat=500000, xbeta = NULL, bin.mu = 0.5)
         ey <- rweXBeta(nPat, regCoeff = c(0, regCoeff), ...);
 
     fx <- function(b0) {
-        expy <- exp(b0+ey);
-        m    <- mean(expy/(1+expy));
+        logp <- (b0 + ey) - log(1 + exp(b0+ey));
+        m    <- mean(exp(logp));
         abs(m - bin.mu);
     }
 
-    rst <- optimize(fx, c(-10+min(ey),10+max(ey)))$minimum;
-    rst
+    rst <- optimize(fx, c(-10+min(ey),10+max(ey)));
+
+    rst$minimum
 }
 
 #' Simulate random errors
@@ -216,7 +217,6 @@ rweSimuTwoArm <- function(nPat, muCov, sdCov, corCov, trt.effect = 0,
                           fmla.y = NULL, fmla.z = NULL, ysig = NULL,
                           b0 = NULL, z1.p = 0.5,
                           sig2Ratio = 2,  ..., do.simu=TRUE) {
-
     ##treatment assignment
     if (is.null(b0) & !identical(0, regCoeff.z)) {
         b0  <- rweGetBinInt(z1.p,

@@ -16,6 +16,9 @@ data {
   //prior of vs
   vector<lower=0>[S] RS;
 
+  //fix vs
+  int<lower = 0, upper = 1> FIXVS;
+
   //target borrowing
   real<lower = 0> A;
 }
@@ -42,9 +45,13 @@ transformed parameters {
   real<lower = 0> betas[S];
 
   for (i in 1:S) {
-      as[i]     = 1 < A*vs[i]/N0[i] ? 1:A*vs[i]/N0[i];
-      alphas[i] = as[i] * N0[i] * YBAR0[i]  + 1;
-      betas[i]  = as[i] * N0[i] * (1-YBAR0[i]) + 1;
+    if (0 == FIXVS) {
+      as[i]  = 1 < A*vs[i]/N0[i] ? 1:A*vs[i]/N0[i];
+    } else {
+      as[i]  = 1 < A*RS[i]/N0[i] ? 1:A*RS[i]/N0[i];
+    }
+    alphas[i] = as[i] * N0[i] * YBAR0[i]  + 1;
+    betas[i]  = as[i] * N0[i] * (1-YBAR0[i]) + 1;
   }
 }
 

@@ -140,6 +140,8 @@ plotRwePs <- function(data.withps, overall.inc = TRUE, add.text = TRUE, facet.sc
                                 Group  = dtaps[["_grp_"]]);
 
         all.data <- rbind(all.data, cur.data);
+    } else {
+        pskl <- pskl %>% filter(Strata != "Overall");
     }
 
     all.data$Group <- as.factor(all.data$Group);
@@ -164,8 +166,8 @@ plotRwePs <- function(data.withps, overall.inc = TRUE, add.text = TRUE, facet.sc
     if (add.text) {
         rst <- rst +
             geom_text(x = Inf, y = Inf, hjust = 1, vjust = 1,
-                      aes(label = paste('N0=', N0,
-                                        ", N1=", N1,
+                      aes(label = paste('n0=', N0,
+                                        ", n1=", N1,
                                         ", OVL=", format(Dist, digits = 3),
                                         sep = "")),
                       data = pskl, size = 4);

@@ -34,11 +34,13 @@ rweSTAN <- function(lst.data, stan.mdl = "powerp",
 #' @param type type of outcomes
 #' @param A    target number of subjects to be borrowed
 #' @param RS   parameters for dirichelet prior
+#' @param Fix.RS whether treat RS as fixed or the prior mean of vs
 #' @param ...  extra parameters for calling function \code{\link{rweSTAN}}
 #'
 #' @export
 #'
-rwePsPowDrawPost <- function(data, type = c("continuous", "binary"), A = 0, RS = NULL, v.outcome = "Y",  ...) {
+rwePsPowDrawPost <- function(data, type = c("continuous", "binary"), A = 0, RS = NULL, Fix.RS = FALSE,
+                             v.outcome = "Y",  ...) {
 
     stopifnot(v.outcome %in% colnames(data));
     type <- match.arg(type);
@@ -68,11 +70,12 @@ rwePsPowDrawPost <- function(data, type = c("continuous", "binary"), A = 0, RS =
     }
 
     if (is.null(RS))
-        RS <- rep(0.5, S);
+        RS <- rep(1/S, S);
 
     lst.data  <- list(S     = S,
                       A     = A,
                       RS    = RS,
+                      FIXVS = as.numeric(Fix.RS),
                       N0    = stan.d[,"N0"],
                       N1    = stan.d[,"N1"],
                       YBAR0 = stan.d[,"YBAR0"],
