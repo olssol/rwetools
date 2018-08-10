@@ -113,8 +113,8 @@ rweGetBinInt <- function(..., regCoeff, nPat=500000, xbeta = NULL, bin.mu = 0.5)
         abs(m - bin.mu);
     }
 
-    rst <- optimize(fx, c(-10+min(ey),10+max(ey)));
-
+    mey <- max(abs(ey));
+    rst <- optimize(fx, c(-100-max(ey),100+max(ey)));
     rst$minimum
 }
 
