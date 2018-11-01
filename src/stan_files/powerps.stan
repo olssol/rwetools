@@ -49,8 +49,9 @@ transformed parameters {
     } else {
       as[i]  = 1 < A*RS[i]/N0[i] ? 1:A*RS[i]/N0[i];
     }
+
     sds[i] = 0 == as[i] ? 0 : SD0[i] / sqrt(as[i] * N0[i]);
-  } 
+  }
 }
 
 model {

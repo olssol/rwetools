@@ -218,8 +218,8 @@ rweSimuTwoArm <- function(nPat, muCov, sdCov, corCov, trt.effect = 0,
                           b0 = NULL, z1.p = 0.5,
                           sig2Ratio = 2,  ..., do.simu=TRUE) {
     ##treatment assignment
-    if (is.null(b0) & !identical(0, regCoeff.z)) {
-        b0  <- rweGetBinInt(z1.p,
+    if (is.null(b0)) {
+        b0  <- rweGetBinInt(bin.mu   = z1.p,
                             muCov    = muCov,
                             sdCov    = sdCov,
                             corCov   = corCov,
@@ -269,7 +269,7 @@ rweSimuTwoArm <- function(nPat, muCov, sdCov, corCov, trt.effect = 0,
 
     list(true.effect = trt.effect,
          simu.data   = simu.data,
-         b0ysig      = c(b0, ysig));
+         b0ysig      = c(b0 = b0, ysig = ysig));
 }
 
 #' Simulate data from an existing dataset

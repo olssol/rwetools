@@ -8,8 +8,7 @@ rwePS <- function(data, ps.fml = NULL,
                   v.grp = "group",
                   v.covs = "V1",
                   d1.grp = 1,
-                  nstrata = 5, ...,
-                  caliper = 0) {
+                  nstrata = 5, ...) {
 
     dnames <- colnames(data);
     stopifnot(v.grp %in% dnames);
@@ -21,14 +20,6 @@ rwePS <- function(data, ps.fml = NULL,
     all.ps  <- get.ps(data, ps.fml = ps.fml, ...);
     D1.ps   <- all.ps[which(d1.grp == data[[v.grp]])];
 
-    ## add caliper width
-    if (caliper > 0) {
-        lgt.d1.ps  <- log(D1.ps/(1-D1.ps));
-        sd.lgt     <- sd(lgt.d1.ps[!is.infinite(lgt.d1.ps)]);
-        D1.ps[which.min(D1.ps)] <- expit(min(lgt.d1.ps) - sd.lgt * caliper);
-        D1.ps[which.max(D1.ps)] <- expit(max(lgt.d1.ps) + sd.lgt * caliper);
-    }
-
     ## stratification
     strata  <- rweCut(D1.ps, all.ps, breaks = nstrata);
     grp     <- rep(1, nrow(data));
@@ -37,7 +28,6 @@ rwePS <- function(data, ps.fml = NULL,
     data[["_ps_"]]     <- all.ps;
     data[["_strata_"]] <- strata;
     data[["_grp_"]]    <- grp;
-
 
     rst <- list(data    = data,
                 ps.fml  = ps.fml,
@@ -51,10 +41,12 @@ rwePS <- function(data, ps.fml = NULL,
 #' Get number of subjects and the distances of PS distributions for each PS
 #' strata
 #'
+#' @param min.n0 threshold for N0, below which the external data in the
+#'     current stratum will be ignored by setting the PS distance to 0
 #'
 #' @export
 #'
-rwePSDist <- function(data.withps, n.bins = 10, type = c("ovl", "kl"), ...) {
+rwePSDist <- function(data.withps, n.bins = 10, min.n0 = 10, type = c("ovl", "kl"), ...) {
     stopifnot(inherits(data.withps,
                        what = get.rwe.class("DWITHPS")));
 
@@ -77,8 +69,14 @@ rwePSDist <- function(data.withps, n.bins = 10, type = c("ovl", "kl"), ...) {
         if (any(is.na(c(ps0, ps1))))
             warning("NA found in propensity scores in a strata");
 
-        cur.dist <- rweDist(ps0, ps1, n.bins = n.bins, type = type, ...);
-        rst      <- rbind(rst, c(i, cur.dist));
+        if (length(ps0) < min.n0) {
+            warning("Not enough data in the external data in the current stratum. External data ignored.");
+            cur.dist <- 0;
+        } else {
+            cur.dist <- rweDist(ps0, ps1, n.bins = n.bins, type = type, ...);
+        }
+
+        rst <- rbind(rst, c(i, cur.dist));
     }
 
     ##overall

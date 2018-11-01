@@ -128,67 +128,9 @@ rweSummaryPost <- function(post.theta, true.theta, quants = c(0.025, 0.975), wei
     cur.ci          <- quantile(cur.post, quants);
     ##post.var        <- apply(post.theta, 1, var);
     ##names(post.var) <- paste("var", 1:length(post.var), sep = "");
-    range.ci        <- range(cur.ci);
 
-    rst <- c(thetahat = cur.m,
-             thetavar = cur.var,
-             bias     = cur.m - true.theta,
-             mse      = (cur.m - true.theta)^2,
-             width    = range.ci[2] - range.ci[1],
-             cover    = true.theta >= range.ci[1] & true.theta <= range.ci[2],
-             lb       = as.numeric(cur.ci[1]),
-             ub       = as.numeric(cur.ci[2]));
+    rst <- rweSummary(cur.m, cur.var, cur.ci, true.theta);
     rst
 
 }
 
-#' Get Posterior for all stratum
-#'
-#'
-#' @param data.ps class DWITHPS data frame
-#' @param A    power of the power prior for each strata
-#' @param ...  extra parameters for calling function \code{\link{rweSTAN}}
-#'
-#' @export
-#'
-rwePowerDrawPost <- function(data.ps, v.outcome = "Y", As=0, type = c("continuous", "binary"), ...) {
-    stopifnot("RWE_DWITHPS" %in% class(data.ps));
-
-    data <- data.ps$data;
-    stopifnot(v.outcome %in% colnames(data));
-    type     <- match.arg(type);
-    stan.mdl <- switch(type,
-                       continuous = "powerp",
-                       binary     = "powerpbinary");
-
-    data      <- data[!is.na(data[["_strata_"]]),];
-    nstrata   <- max(data[["_strata_"]]);
-    rst.theta <- NULL;
-    for (i in 1:nstrata) {
-        cur.d1 <- data[data[["_strata_"]] == i & data[["_grp_"]] == 1, v.outcome];
-        cur.d0 <- data[data[["_strata_"]] == i & data[["_grp_"]] == 0, v.outcome];
-
-        if (0 == length(cur.d1)) {
-            warning("Stratum contains no subjects from group 1");
-            next;
-        }
-
-        Y1 <- cur.d1;
-        N1 <- length(cur.d1);
-        N0 <- length(cur.d0);
-        if (0 == N0) {
-            ##dummy value
-            Y0 <- 0;
-        } else {
-            Y0 <- cur.d0;
-        }
-
-        cur.A     <- As[min(i, length(As))];
-        cur.post  <- rweSTAN(lst.data = list(A=cur.A, N0=N0, N1=N1, Y0=Y0, Y1=Y1),
-                             stan.mdl = stan.mdl, ...);
-        cur.theta <- rstan::extract(cur.post, pars = "theta")$theta;
-        rst.theta <- rbind(rst.theta, cur.theta);
-    }
-
-    rst.theta
-}

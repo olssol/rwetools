@@ -4,7 +4,7 @@
 \alias{rweDist}
 \title{Compute distance from F0 to F1}
 \usage{
-rweDist(sample.F0, sample.F1, n.bins = 10, type = c("kl", "ovl"),
+rweDist(sample.F0, sample.F1, n.bins = 10, type = c("ovl", "kl"),
   epsilon = 10^-6)
 }
 \arguments{

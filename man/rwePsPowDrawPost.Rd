@@ -4,17 +4,19 @@
 \alias{rwePsPowDrawPost}
 \title{Get Posterior for all stratum}
 \usage{
-rwePsPowDrawPost(data.ps, type = c("continuous", "binary"), A = 0,
-  RS = NULL, v.outcome = "Y", ...)
+rwePsPowDrawPost(data, type = c("continuous", "binary"), A = 0,
+  RS = NULL, Fix.RS = FALSE, v.outcome = "Y", ...)
 }
 \arguments{
-\item{data.ps}{class DWITHPS data frame}
+\item{data}{class DWITHPS data frame}
 
 \item{type}{type of outcomes}
 
 \item{A}{target number of subjects to be borrowed}
 
 \item{RS}{parameters for dirichelet prior}
+
+\item{Fix.RS}{whether treat RS as fixed or the prior mean of vs}
 
 \item{...}{extra parameters for calling function \code{\link{rweSTAN}}}
 }

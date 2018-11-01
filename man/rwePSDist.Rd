@@ -5,7 +5,12 @@
 \title{Get number of subjects and the distances of PS distributions for each PS
 strata}
 \usage{
-rwePSDist(data.withps, n.bins = 10, type = c("ovl", "kl"), ...)
+rwePSDist(data.withps, n.bins = 10, min.n0 = 10, type = c("ovl",
+  "kl"), ...)
+}
+\arguments{
+\item{min.n0}{threshold for N0, below which the external data in the
+current stratum will be ignored by setting the PS distance to 0}
 }
 \description{
 Get number of subjects and the distances of PS distributions for each PS

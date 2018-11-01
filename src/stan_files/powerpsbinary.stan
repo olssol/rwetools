@@ -58,7 +58,7 @@ transformed parameters {
 model {
   //prior
   if (A > 0) {
-    target += beta_lpdf(thetas | alphas, betas);    
+    target += beta_lpdf(thetas | alphas, betas);
   } else {
     thetas ~ uniform(0,1);
   }

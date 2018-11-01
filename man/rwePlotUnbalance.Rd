@@ -4,8 +4,9 @@
 \alias{rwePlotUnbalance}
 \title{Plot unbalance in covariates}
 \usage{
-rwePlotUnbalance(data.unb, var.x = "Diff", var.group = NULL, xlim = NULL,
-  ylim = NULL, title = "", f.grid = formula("V~Study"), adjust = 1)
+rwePlotUnbalance(data.unb, var.x = "Diff", var.group = NULL,
+  xlim = NULL, ylim = NULL, title = "",
+  f.grid = formula("V~Study"), adjust = 1)
 }
 \description{
 Plot unbalance in covariates

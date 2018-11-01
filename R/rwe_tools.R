@@ -80,13 +80,16 @@ rweUnbalance <- function(nPat, ..., pts = NULL, covs = NULL, diff = TRUE,
 #'     kl, or the overlapping coefficient when type is ovl
 #' @export
 #'
-rweDist <- function(sample.F0, sample.F1, n.bins = 10, type = c("kl", "ovl"), epsilon = 10^-6) {
+rweDist <- function(sample.F0, sample.F1, n.bins = 10, type = c("ovl", "kl"), epsilon = 10^-6) {
 
     type     <- match.arg(type);
 
     smps     <- c(sample.F0, sample.F1);
     n0       <- length(sample.F0);
     n1       <- length(sample.F1);
+
+    if (0 == n0 | 0 == n1)
+        return(c(n0, n1, NA));
 
     if (1 == length(unique(smps))) {
         cut.smps <- rep(1, n0+n1)
@@ -104,9 +107,9 @@ rweDist <- function(sample.F0, sample.F1, n.bins = 10, type = c("kl", "ovl"), ep
 
         rst  <- rst + switch(type,
                              kl = {ep0  <- (n0.j+epsilon)/(n0 + epsilon * n.bins);
-                          ep1  <- (n1.j+epsilon)/(n1 + epsilon * n.bins);
-                          ep1 * log(ep1/ep0)},
-                          ovl = min(n0.j/n0, n1.j/n1));
+                                 ep1  <- (n1.j+epsilon)/(n1 + epsilon * n.bins);
+                                 ep1 * log(ep1/ep0)},
+                             ovl = min(n0.j/n0, n1.j/n1));
     }
 
     if ("kl" == type)
@@ -142,5 +145,26 @@ rweFreqTbl <- function(data, var.groupby, vars = NULL) {
         rst <- rbind(rst, data.frame(cur.freq));
     }
 
+    rst
+}
+
+
+#' Summary statistics
+#'
+#'
+#'
+#'
+#' @export
+#'
+rweSummary <- function(cur.m, cur.var, cur.ci, true.theta) {
+    range.ci <- range(cur.ci);
+    rst      <- c(thetahat = cur.m,
+                  thetavar = cur.var,
+                  bias     = cur.m - true.theta,
+                  mse      = (cur.m - true.theta)^2,
+                  width    = range.ci[2] - range.ci[1],
+                  cover    = true.theta >= range.ci[1] & true.theta <= range.ci[2],
+                  lb       = as.numeric(range.ci[1]),
+                  ub       = as.numeric(range.ci[2]));
     rst
 }
