@@ -10,7 +10,7 @@ data {
   real<lower = 0> SD0;
 
   //target borrowing
-  real<lower = 0> A;
+  real<lower = 0> ALPHA;
 }
 
 transformed data {
@@ -19,12 +19,11 @@ transformed data {
 }
 
 parameters {
-  real          theta;
+  real theta;
 }
 
 model {
   //prior
   theta ~ normal(0, 1000);
-
-  target +=  normal_lpdf(YBAR0 | theta, sn0) * A;
+  target +=  normal_lpdf(YBAR0 | theta, sn0) * ALPHA;
 }

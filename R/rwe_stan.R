@@ -57,7 +57,7 @@ rwePsPowDrawPost <- function(data, type = c("continuous", "binary"), A = 0, RS =
         cur.d0 <- data[data[["_strata_"]] == i & data[["_grp_"]] == 0, v.outcome];
 
         if (0 == length(cur.d1) | 0 == length(cur.d0)) {
-            stop(paste("Stratum ", i, " contains no subjects from group 1", sep = ""));
+            stop(paste("Stratum ", i, " contains no subjects from group 1 or 0", sep = ""));
         }
 
         cur.n1 <- length(cur.d1);
@@ -134,3 +134,65 @@ rweSummaryPost <- function(post.theta, true.theta, quants = c(0.025, 0.975), wei
 
 }
 
+
+#' Get Prior Only for all stratum
+#'
+#' @param data class DWITHPS data frame
+#' @param type type of outcomes
+#' @param A    target number of subjects to be borrowed
+#' @param RS   parameters for dirichelet prior
+#' @param ...  extra parameters for calling function \code{\link{rweSTAN}}
+#'
+#' @export
+#'
+rwePsPowDrawPrior <- function(data, type = c("continuous", "binary"), A = 0, RS = NULL,
+                              v.outcome = "Y",  iter = 2000, ...) {
+
+    stopifnot(v.outcome %in% colnames(data));
+    type <- match.arg(type);
+
+    ## prepare stan data
+    data   <- data[!is.na(data[["_strata_"]]),];
+    S      <- max(data[["_strata_"]]);
+
+    if (is.null(RS))
+        RS <- rep(1/S, S);
+
+    rst.theta <- NULL;
+    for (i in 1:S) {
+        cur.d0 <- data[data[["_strata_"]] == i & data[["_grp_"]] == 0, v.outcome];
+
+        if (0 == length(cur.d0)) {
+            warning(paste("Stratum ", i, " contains no subjects from group 0", sep = ""));
+            next;
+        }
+
+        N0    <- length(cur.d0);
+        YBAR0 <- mean(cur.d0);
+        SD0   <- sd(cur.d0);
+        ALPHA <- min(1, A*RS[i]/sum(RS)/N0);
+
+        cat(A, ALPHA, N0, RS[i], "\n");
+
+        ## sampling
+        if ("continuous" == type) {
+            rst.post  <- rweSTAN(lst.data = list(N0    = N0,
+                                                 YBAR0 = YBAR0,
+                                                 SD0   = SD0,
+                                                 ALPHA = ALPHA),
+                                 stan.mdl = "prior",
+                                 iter = iter,
+                                 ...);
+            rst.theta <- rstan::extract(rst.post, pars = "theta")$theta;
+        } else {
+            cur.theta <- rbeta(iter, ALPHA*YBAR0*N0+1, ALPHA*(1-YBAR0)*N0+1);
+        }
+
+        rst.theta <- rbind(rst.theta, cbind(i, cur.theta));
+    }
+
+    ## return
+    colnames(rst.theta) <- c("Stratum", "Samples");
+    rst.theta           <- data.frame(rst.theta);
+    rst.theta
+}
