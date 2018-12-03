@@ -1,20 +1,21 @@
-#' PS-Integrated Weighted Likelihood Estimation for all stratum
+#' PS-Integrated Weighted Likelihood Estimation for all stratum by bootstrap
 #'
 #' @param data class DWITHPS data frame
 #' @param A target number of subjects to be borrowed
 #' @param RS parameters for dirichelet prior
 #' @param ... parameters for \code{rweWL}
 #' @param bs.n number of bootstraps
-#' @param bs.conf bootstrap confidence interval level
+#' @param m.var method to get variance: jackknife or bootstrap
 #' @param seed random seed
 #'
 #' @export
 #'
-rwePsWL <- function(data, RS = NULL, A = 0, v.outcome = "Y", bs.n = 1000, bs.conf = c(0.025, 0.975),
-                    seed = NULL, ...) {
+rwePsWL <- function(data, RS = NULL, A = 0, v.outcome = "Y", m.var = c("jk", "bs"),
+                    bs.n = 1000, seed = NULL, ...) {
 
     stopifnot(v.outcome %in% colnames(data));
 
+    m.var <- match.arg(m.var);
     if (!is.null(seed))
         set.seed(seed);
 
@@ -41,25 +42,44 @@ rwePsWL <- function(data, RS = NULL, A = 0, v.outcome = "Y", bs.n = 1000, bs.con
         cur.lambda <- min(ns0, A * RS[i]/sum(RS));
         cur.theta  <- rweWL(cur.data = cur.d1, ext.data = cur.d0, lambda = cur.lambda, ...);
 
-        bs.theta <- NULL;
-        for (j in 1:bs.n) {
-            cur.d1.bs <- sample(cur.d1, replace = TRUE);
-            cur.bs    <- rweWL(cur.data = cur.d1.bs, ext.data = cur.d0, lambda = cur.lambda, ...);
-            bs.theta  <- c(bs.theta, cur.bs);
+        ##bootstrap or jackknife
+        var.theta  <- NULL;
+        if ("bs" == m.var) {
+            for (j in 1:bs.n) {
+                cur.d1.bs <- sample(cur.d1, replace = TRUE);
+                cur.bs    <- rweWL(cur.data = cur.d1.bs, ext.data = cur.d0, lambda = cur.lambda, ...);
+                var.theta <- c(var.theta, cur.bs);
+            }
+
+            var.mle <- var(var.theta);
+        } else if ("jk" == m.var) {
+            for (j in 1:ns1) {
+                cur.bs <- rweWL(cur.data = cur.d1[-j], ext.data = cur.d0, lambda = cur.lambda, ...);
+                var.theta <- c(var.theta, cur.bs);
+            }
+
+            for (j in 1:ns0) {
+                cur.bs    <- rweWL(cur.data = cur.d1, ext.data = cur.d0[-j], lambda = cur.lambda, ...);
+                var.theta <- c(var.theta, cur.bs);
+            }
+            var.mle <- (ns1+ns0-1)/(ns1+ns0)*sum((var.theta - cur.theta)^2);
         }
 
-        rst.theta  <- rbind(rst.theta, c(ns1, cur.theta, bs.theta));
+        rst.theta <- rbind(rst.theta, c(ns1, cur.theta, var.mle, ns0));
     }
 
     ##mwle
     ws       <- rst.theta[,1]/sum(rst.theta[,1]);
     rst.mwle <- sum(ws * rst.theta[,2]);
-    rst.bs   <- apply(rst.theta[,-(1:2), drop = FALSE], 2, function(x) sum(ws*x));
+    ##rst.bs   <- apply(rst.theta[,-(1:2), drop = FALSE], 2, function(x) sum(ws*x));
+    rst.var  <- sum(ws * rst.theta[,3]);
 
-    list(mwle   = rst.mwle,
-         bs.ci  = quantile(rst.bs, probs = bs.conf),
-         bs.var = var(rst.bs),
-         mwle.strata = rst.theta[, 2]);
+    list(mwle        = rst.mwle,
+         var         = rst.var,
+         mwle.strata = rst.theta[,2],
+         var.strata  = rst.theta[,3],
+         ns1         = rst.theta[,1],
+         ns0         = rst.theta[,4]);
 }
 
 
