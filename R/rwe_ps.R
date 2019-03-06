@@ -22,7 +22,9 @@ rwePS <- function(data, ps.fml = NULL,
 
 
     ## d1 index
-    d1.inx  <- d1.grp == data[[v.grp]];
+    d1.inx   <- d1.grp == data[[v.grp]];
+    keep.inx <- which(d1.inx);
+
     if (!is.null(d1.arm))
         d1.inx <- d1.inx & d1.arm == data[[v.arm]];
 
@@ -30,7 +32,7 @@ rwePS <- function(data, ps.fml = NULL,
     D1.ps   <- all.ps[which(d1.inx)];
 
     ## stratification
-    strata  <- rweCut(D1.ps, all.ps, breaks = nstrata);
+    strata  <- rweCut(D1.ps, all.ps, breaks = nstrata, keep.inx = keep.inx);
     grp     <- rep(1, nrow(data));
     grp[which(data[[v.grp]] != d1.grp)] <- 0;
 
