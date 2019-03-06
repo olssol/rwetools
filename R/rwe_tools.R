@@ -115,7 +115,7 @@ rweDist <- function(sample.F0, sample.F1, n.bins = 10, type = c("ovl", "kl"), ep
     if ("kl" == type)
         rst <- 1/(1+rst);
 
-    c(n0,n1,rst);
+    rst;
 }
 
 

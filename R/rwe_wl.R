@@ -58,10 +58,13 @@ rwePsWL <- function(data, RS = NULL, A = 0, v.outcome = "Y", m.var = c("jk", "bs
                 var.theta <- c(var.theta, cur.bs);
             }
 
-            for (j in 1:ns0) {
-                cur.bs    <- rweWL(cur.data = cur.d1, ext.data = cur.d0[-j], lambda = cur.lambda, ...);
-                var.theta <- c(var.theta, cur.bs);
+            if (ns0 > 0) {
+                for (j in 1:ns0) {
+                    cur.bs    <- rweWL(cur.data = cur.d1, ext.data = cur.d0[-j], lambda = cur.lambda, ...);
+                    var.theta <- c(var.theta, cur.bs);
+                }
             }
+
             var.mle <- (ns1+ns0-1)/(ns1+ns0)*sum((var.theta - cur.theta)^2);
         }
 
@@ -72,7 +75,7 @@ rwePsWL <- function(data, RS = NULL, A = 0, v.outcome = "Y", m.var = c("jk", "bs
     ws       <- rst.theta[,1]/sum(rst.theta[,1]);
     rst.mwle <- sum(ws * rst.theta[,2]);
     ##rst.bs   <- apply(rst.theta[,-(1:2), drop = FALSE], 2, function(x) sum(ws*x));
-    rst.var  <- sum(ws * rst.theta[,3]);
+    rst.var  <- sum(ws^2 * rst.theta[,3]);
 
     list(mwle        = rst.mwle,
          var         = rst.var,
@@ -128,6 +131,12 @@ rweWL <- function(cur.data, ext.data, lambda, type = c("continuous", "binary"), 
     type <- match.arg(type);
     n1   <- length(cur.data);
 
+    ## ignore external data
+    if (0 == lambda) {
+        ext.data <- cur.data; ## placeholder
+        equal.sd <- TRUE;
+    }
+
     init.theta <- (n1/(n1 + lambda)) * mean(cur.data) + (lambda/(n1 + lambda)) * mean(ext.data);
 
     if (("continuous" == type & equal.sd) | "binary" == type) {
@@ -145,3 +154,48 @@ rweWL <- function(cur.data, ext.data, lambda, type = c("continuous", "binary"), 
 
     rst;
 }
+
+
+
+#' Weighted Likelihood Estimation
+#'
+#' @param cur.data data from current study
+#' @param ext.data data from external study
+#' @param type     type of outcomes
+#' @param ext.ps   ps of the external study
+#' @param equal.sd boolean. whether sd is the same between the current and external study
+#'
+#' @export
+#'
+rweWL2 <- function(cur.data, ext.data, ext.ps, type = c("continuous", "binary"), equal.sd = FALSE) {
+
+    type       <- match.arg(type);
+    n1         <- length(cur.data);
+    init.theta <- mean(c(cur.data, ext.data));
+    init.sig   <- sd(c(cur.data, ext.data));
+
+    f.cont <- function(pars) {
+        theta  <- pars[1];
+        sig.1  <- exp(pars[2]);
+        sig.0  <- exp(pars[3]);
+
+        ll.1 <- dnorm(cur.data, theta, sd = sig.1, log = TRUE);
+        ll.0 <- dnorm(ext.data, theta, sd = sig.0, log = TRUE);
+
+        sum(ll.1) + sum(ll.0 * ext.ps);
+    }
+
+    if ("continuous" == type) {
+        rst <- optim(c(init.theta, log(init.sig), log(init.sig)),
+                     method = "Nelder-Mead",
+                     fn     = f.cont,
+                     control=list(fnscale=-1))$par[1];
+    }  else {
+        A   <- sum(cur.data) + sum(ext.ps * ext.data);
+        B   <- sum(1 - cur.data) + sum( ext.ps * (1-ext.data));
+        rst <- A/(A+B);
+    }
+
+    rst;
+}
+

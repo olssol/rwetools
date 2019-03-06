@@ -107,15 +107,21 @@ rweGetBinInt <- function(..., regCoeff, nPat=500000, xbeta = NULL, bin.mu = 0.5)
     if (is.null(xbeta))
         ey <- rweXBeta(nPat, regCoeff = c(0, regCoeff), ...);
 
-    fx <- function(b0) {
+    fx <- function(b0, bmu) {
         logp <- (b0 + ey) - log(1 + exp(b0+ey));
         m    <- mean(exp(logp));
-        abs(m - bin.mu);
+        rst  <- abs(m - bmu);
     }
 
     mey <- max(abs(ey));
-    rst <- optimize(fx, c(-100-max(ey),100+max(ey)));
-    rst$minimum
+    rst <- NULL;
+
+    for (i in 1:length(bin.mu)) {
+        cur.rst <- optimize(fx, c(-100-max(ey),100+max(ey)), bmu = bin.mu[i])$minimum;
+        rst     <- c(rst, cur.rst);
+    }
+
+    rst
 }
 
 #' Simulate random errors
