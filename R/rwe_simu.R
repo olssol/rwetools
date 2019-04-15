@@ -117,7 +117,7 @@ rweGetBinInt <- function(..., regCoeff, nPat=500000, xbeta = NULL, bin.mu = 0.5)
     rst <- NULL;
 
     for (i in 1:length(bin.mu)) {
-        cur.rst <- optimize(fx, c(-100-max(ey),100+max(ey)), bmu = bin.mu[i])$minimum;
+        cur.rst <- optimize(fx, c(-100-mey,100+mey), bmu = bin.mu[i])$minimum;
         rst     <- c(rst, cur.rst);
     }
 

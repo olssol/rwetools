@@ -147,7 +147,6 @@ plotRwePs <- function(data.withps, overall.inc = TRUE, add.text = TRUE, facet.sc
     rst <- ggplot(data = all.data, aes(x = Ps)) +
         geom_density(alpha = 0.2,
                        aes(group = Group,
-                           color = Group,
                            fill  = Group,
                            linetype = Group),
                      trim  = TRUE,
@@ -155,6 +154,7 @@ plotRwePs <- function(data.withps, overall.inc = TRUE, add.text = TRUE, facet.sc
         labs(x = "Propensity Score", y = "Density") +
         scale_y_continuous(breaks = NULL) +
         scale_x_continuous(limits = xlim) +
+        scale_fill_manual(values=c("gray20", "gray80")) +
         theme_bw() +
         theme(strip.background = element_blank(),
               panel.grid = element_blank(),
@@ -190,9 +190,10 @@ plot.balance.fac <- function(dtaps, v, overall.inc = TRUE) {
         geom_bar(alpha = 0.4,
                  stat = "identity",
                  position = "dodge",
+                 color = "black",
                  aes(group = Group,
-                     linetype = Group,
                      fill  = Group)) +
+        scale_fill_manual(values=c("gray20", "gray80")) +
         scale_y_continuous(breaks = NULL, limits = c(0,1)) +
         labs(x = "", y = "") +
         facet_grid(Strata ~ .);
@@ -223,11 +224,11 @@ plot.balance.cont <- function(dtaps, v, nstrata, overall.inc = TRUE, facet.scale
     rst <- ggplot(data = cur.d, aes(x = Value)) +
         geom_density(alpha = 0.2,
                      aes(group = Group,
-                         color = Group,
                          fill  = Group,
                          linetype = Group),
                      na.rm = TRUE) +
         scale_y_continuous(breaks = NULL) +
+        scale_fill_manual(values=c("gray20", "white")) +
         labs(x = "", y = "") +
         facet_grid(Strata ~ ., scales = facet.scales);
     rst

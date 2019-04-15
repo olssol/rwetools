@@ -20,8 +20,7 @@ rwePS <- function(data, ps.fml = NULL,
     if (is.null(ps.fml))
         ps.fml <- as.formula(paste(v.grp, "~", paste(v.covs, collapse="+"), sep=""));
 
-
-    ## d1 index
+    ## d1 index will be kept in the results
     d1.inx   <- d1.grp == data[[v.grp]];
     keep.inx <- which(d1.inx);
 

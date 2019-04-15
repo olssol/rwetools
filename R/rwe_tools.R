@@ -1,5 +1,10 @@
 #' Cut a sequence of numbers into bins with equal numbers in each bin
 #'
+#' @param x vector of values based on which cut points will be determined
+#' @param y vector of values to be cut, default to be the same as \code{x}
+#' @param breaks number of cut points
+#' @param keep.inx indices of y that will be categorized as 1 or the largest bin
+#'     even if their values are out of range of x
 #'
 #' @export
 #'
