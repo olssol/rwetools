@@ -4,10 +4,12 @@
 \alias{rwePS}
 \title{Get propensity scores}
 \usage{
-rwePS(data, ps.fml = NULL, v.grp = "group", v.covs = "V1",
-  d1.grp = 1, nstrata = 5, ...)
+rwePS(data, ps.fml = NULL, v.grp = "group", v.arm = "arm",
+  v.covs = "V1", d1.arm = NULL, d1.grp = 1, nstrata = 5, ...)
 }
 \arguments{
+\item{d1.arm}{define strata based on a specific arm. Ignored if NULL.}
+
 \item{...}{parameters to get propensity scores}
 }
 \description{

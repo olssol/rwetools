@@ -165,6 +165,90 @@ rweFreqTbl <- function(data, var.groupby, vars = NULL) {
     rst
 }
 
+#' Split A into Bins
+#'
+#' Split A into bins to minimize the number difference between two arms
+#'
+#' @param ns1.trt numbers of treatment arm patients in each stratum
+#' @param ns1.ctl numbers of control arm patients in each stratum
+#' @param ns0     numbers of external patients in each stratum
+#' @param A       number of target patients to borrow
+#'
+#' @export
+#'
+rweEvenLmbdS <- function(ns1.trt, ns1.ctl, ns0, A, init.lmbds = NULL) {
+
+    f.target <- function(lmbds) {
+        cl  <- c(lmbds, A - sum(lmbds));
+        rst <- sum((ns1.trt - ns1.ctl - cl)^2);
+        rst
+    }
+
+    f.gradient <- function(lmbds) {
+        g <- -2*(ns1.trt[-NS] - ns1.ctl[-NS] - lmbds);
+    }
+
+    NS <- length(ns1.trt);
+
+    stopifnot(NS == length(ns1.ctl) &
+              NS == length(ns0));
+
+
+    ## there is only one stratum
+    if (1 == NS) {
+        return(A);
+    }
+
+    ## multiple strata
+
+    ## restrictions lmb > 0; sum(lmb) < A; lmb < ns0;
+    ui <- rbind(diag(NS-1),
+                -1 * diag(NS-1),
+                rep(-1, NS-1),
+                rep(1, NS-1));
+
+    ci <- c(rep(0, NS-1),
+            -ns0[-NS],
+            -A,
+            A - ns0[NS]);
+
+    if (is.null(init.lmbds))
+        init.lmbds <- rep(A/NS, NS-1);
+
+    rst <- constrOptim(theta = init.lmbds,
+                       f     = f.target,
+                       grad  = f.gradient,
+                       ui, ci, mu = 1e-04, control = list(),
+                       outer.iterations = 100, outer.eps = 1e-05,
+                       hessian = FALSE);
+
+    c(rst$par, A - sum(rst$par))
+}
+
+#' Get weights
+#'
+#' @param A target number of subjects to be borrowed
+#' @param m.lambda method to split A. rs: by overlapping coefficient; even: by
+#'     minimizing trt and control imbalance in numbers
+#'
+#' @return power parameter
+#'
+#' @export
+#'
+rweGetLambda <- function(A, rs = NULL, ns1.trt = NULL, ns1.ctl = NULL, ns0,
+                         m.lambda = c("rs", "even"), ...) {
+    m.lambda <- match.arg(m.lambda);
+
+    if ("rs" == m.lambda) {
+        rst <- min(ns0, A * rs/sum(rs));
+    } else {
+        rst <- rweEvenLmbdS(ns1.trt, ns1.ctl, ns0, A, ...);
+    }
+
+    ## standardize before return
+    rst / ns0;
+}
+
 
 #' Summary statistics
 #'

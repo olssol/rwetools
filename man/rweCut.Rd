@@ -4,7 +4,17 @@
 \alias{rweCut}
 \title{Cut a sequence of numbers into bins with equal numbers in each bin}
 \usage{
-rweCut(x, y = x, breaks = 5)
+rweCut(x, y = x, breaks = 5, keep.inx = NULL)
+}
+\arguments{
+\item{x}{vector of values based on which cut points will be determined}
+
+\item{y}{vector of values to be cut, default to be the same as \code{x}}
+
+\item{breaks}{number of cut points}
+
+\item{keep.inx}{indices of y that will be categorized as 1 or the largest bin
+even if their values are out of range of x}
 }
 \description{
 Cut a sequence of numbers into bins with equal numbers in each bin

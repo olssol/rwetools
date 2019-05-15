@@ -6,11 +6,13 @@
 strata}
 \usage{
 rwePSDist(data.withps, n.bins = 10, min.n0 = 10, type = c("ovl",
-  "kl"), ...)
+  "kl"), d1.arm = NULL, ...)
 }
 \arguments{
 \item{min.n0}{threshold for N0, below which the external data in the
 current stratum will be ignored by setting the PS distance to 0}
+
+\item{d1.arm}{calculate distance based on a specific arm. Ignored if NULL.}
 }
 \description{
 Get number of subjects and the distances of PS distributions for each PS

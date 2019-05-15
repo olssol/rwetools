@@ -1,8 +1,6 @@
 #' PS-Integrated Weighted Likelihood Estimation for all stratum by bootstrap
 #'
 #' @param data class DWITHPS data frame
-#' @param A target number of subjects to be borrowed
-#' @param RS parameters for dirichelet prior
 #' @param ... parameters for \code{rweWL}
 #' @param bs.n number of bootstraps
 #' @param m.var method to get variance: jackknife or bootstrap
@@ -10,22 +8,19 @@
 #'
 #' @export
 #'
-rwePsWL <- function(data, RS = NULL, A = 0, v.outcome = "Y", m.var = c("jk", "bs"),
+rwePsWL <- function(data, lambdas, v.outcome = "Y", m.var = c("jk", "bs"),
                     bs.n = 1000, seed = NULL, ...) {
 
     stopifnot(v.outcome %in% colnames(data));
 
     m.var <- match.arg(m.var);
+
     if (!is.null(seed))
         set.seed(seed);
 
     ## prepare data
     data   <- data[!is.na(data[["_strata_"]]),];
     S      <- max(data[["_strata_"]]);
-
-    ## distance rs
-    if (is.null(RS))
-        RS <- rep(1, S);
 
     ## find mwle
     rst.theta <- NULL;
@@ -35,11 +30,12 @@ rwePsWL <- function(data, RS = NULL, A = 0, v.outcome = "Y", m.var = c("jk", "bs
 
         ns1 <- length(cur.d1);
         ns0 <- length(cur.d0);
+
         if (0 == ns1) {
             stop(paste("Stratum ", i, " contains no subjects from group 1", sep = ""));
         }
 
-        cur.lambda <- min(ns0, A * RS[i]/sum(RS));
+        cur.lambda <- lambdas[i];
         cur.theta  <- rweWL(cur.data = cur.d1, ext.data = cur.d0, lambda = cur.lambda, ...);
 
         ##bootstrap or jackknife
@@ -47,14 +43,16 @@ rwePsWL <- function(data, RS = NULL, A = 0, v.outcome = "Y", m.var = c("jk", "bs
         if ("bs" == m.var) {
             for (j in 1:bs.n) {
                 cur.d1.bs <- sample(cur.d1, replace = TRUE);
-                cur.bs    <- rweWL(cur.data = cur.d1.bs, ext.data = cur.d0, lambda = cur.lambda, ...);
+                cur.bs    <- rweWL(cur.data = cur.d1.bs, ext.data = cur.d0,
+                                   lambda = cur.lambda, ...);
                 var.theta <- c(var.theta, cur.bs);
             }
 
             var.mle <- var(var.theta);
         } else if ("jk" == m.var) {
             for (j in 1:ns1) {
-                cur.bs <- rweWL(cur.data = cur.d1[-j], ext.data = cur.d0, lambda = cur.lambda, ...);
+                cur.bs <- rweWL(cur.data = cur.d1[-j], ext.data = cur.d0,
+                                lambda = cur.lambda, ...);
                 var.theta <- c(var.theta, cur.bs);
             }
 
@@ -91,7 +89,7 @@ rwePsWL <- function(data, RS = NULL, A = 0, v.outcome = "Y", m.var = c("jk", "bs
 #' @param cur.data data from current study
 #' @param ext.data data from external study
 #' @param type     type of outcomes
-#' @param lambda    power parameter
+#' @param lambda   power parameter
 #' @param equal.sd boolean. whether sd is the same between the current and external study
 #'
 #' @export
@@ -111,7 +109,7 @@ rweWL <- function(cur.data, ext.data, lambda, type = c("continuous", "binary"), 
         ll
     }
 
-    f.gradient <- function(par) {
+    f.gradient <- function(pars) {
         theta  <- pars[1];
         sig2.1 <- pars[2];
         sig2.0 <- pars[3];
@@ -122,7 +120,7 @@ rweWL <- function(cur.data, ext.data, lambda, type = c("continuous", "binary"), 
         ## d logl / d sig2.1
         g[2] <- - n1/2/sig2.1     + n1     * mean((cur.data - theta)^2)/2/sig2.1/sig2.1;
         ## d logl / d sig2.0
-        g[2] <- - lambda/2/sig2.0 + lambda * mean((cur.data - theta)^2)/2/sig2.0/sig2.0;
+        g[3] <- - lambda/2/sig2.0 + lambda * mean((cur.data - theta)^2)/2/sig2.0/sig2.0;
 
         return(g)
     }

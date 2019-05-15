@@ -2,26 +2,22 @@
 % Please edit documentation in R/rwe_wl.R
 \name{rwePsWL}
 \alias{rwePsWL}
-\title{PS-Integrated Weighted Likelihood Estimation for all stratum}
+\title{PS-Integrated Weighted Likelihood Estimation for all stratum by bootstrap}
 \usage{
-rwePsWL(data, RS = NULL, A = 0, v.outcome = "Y", bs.n = 1000,
-  bs.conf = c(0.025, 0.975), seed = NULL, ...)
+rwePsWL(data, lambdas, v.outcome = "Y", m.var = c("jk", "bs"),
+  bs.n = 1000, seed = NULL, ...)
 }
 \arguments{
 \item{data}{class DWITHPS data frame}
 
-\item{RS}{parameters for dirichelet prior}
-
-\item{A}{target number of subjects to be borrowed}
+\item{m.var}{method to get variance: jackknife or bootstrap}
 
 \item{bs.n}{number of bootstraps}
-
-\item{bs.conf}{bootstrap confidence interval level}
 
 \item{seed}{random seed}
 
 \item{...}{parameters for \code{rweWL}}
 }
 \description{
-PS-Integrated Weighted Likelihood Estimation for all stratum
+PS-Integrated Weighted Likelihood Estimation for all stratum by bootstrap
 }
