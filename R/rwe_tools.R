@@ -240,7 +240,7 @@ rweGetLambda <- function(A, rs = NULL, ns1.trt = NULL, ns1.ctl = NULL, ns0,
     m.lambda <- match.arg(m.lambda);
 
     if ("rs" == m.lambda) {
-        rst <- min(ns0, A * rs/sum(rs));
+        rst <- apply(cbind(ns0, A * rs/sum(rs)), 1, min);
     } else {
         rst <- rweEvenLmbdS(ns1.trt, ns1.ctl, ns0, A, ...);
     }
