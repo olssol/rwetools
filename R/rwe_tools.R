@@ -231,7 +231,7 @@ rweEvenLmbdS <- function(ns1.trt, ns1.ctl, ns0, A, init.lmbds = NULL) {
 #' @param m.lambda method to split A. rs: by overlapping coefficient; even: by
 #'     minimizing trt and control imbalance in numbers
 #'
-#' @return power parameter
+#' @return power parameter before standardization
 #'
 #' @export
 #'
@@ -245,8 +245,7 @@ rweGetLambda <- function(A, rs = NULL, ns1.trt = NULL, ns1.ctl = NULL, ns0,
         rst <- rweEvenLmbdS(ns1.trt, ns1.ctl, ns0, A, ...);
     }
 
-    ## standardize before return
-    rst / ns0;
+    rst;
 }
 
 
