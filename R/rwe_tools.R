@@ -236,15 +236,14 @@ rweEvenLmbdS <- function(ns1.trt, ns1.ctl, ns0, A, init.lmbds = NULL) {
 #' @export
 #'
 rweGetLambda <- function(A, rs = NULL, ns1.trt = NULL, ns1.ctl = NULL, ns0,
-                         m.lambda = c("rs", "even"), ...) {
+                         m.lambda = c("rs", "even", "inverse"), ...) {
     m.lambda <- match.arg(m.lambda);
 
-    if ("rs" == m.lambda) {
-        rst <- apply(cbind(ns0, A * rs/sum(rs)), 1, min);
-    } else {
-        rst <- rweEvenLmbdS(ns1.trt, ns1.ctl, ns0, A, ...);
-    }
-
+    rst <- switch(m.lambda,
+                  rs      = apply(cbind(ns0, A * rs/sum(rs)), 1, min),
+                  even    = rweEvenLmbdS(ns1.trt, ns1.ctl, ns0, A, ...),
+                  inverse = { mrs <- 1/(1-rs);
+                              apply(cbind(ns0, A * mrs/sum(mrs)), 1, min)})
     rst;
 }
 

@@ -3,6 +3,7 @@
 #' @param data class DWITHPS data frame
 #' @param ... parameters for \code{rweWL}
 #' @param bs.n number of bootstraps
+#' @param lambdas power parameter without standardization by ns0
 #' @param m.var method to get variance: jackknife or bootstrap
 #' @param seed random seed
 #'
@@ -58,7 +59,8 @@ rwePsWL <- function(data, lambdas, v.outcome = "Y", m.var = c("jk", "bs"),
 
             if (ns0 > 0) {
                 for (j in 1:ns0) {
-                    cur.bs    <- rweWL(cur.data = cur.d1, ext.data = cur.d0[-j], lambda = cur.lambda, ...);
+                    cur.bs    <- rweWL(cur.data = cur.d1, ext.data = cur.d0[-j],
+                                       lambda = cur.lambda, ...);
                     var.theta <- c(var.theta, cur.bs);
                 }
             }
@@ -147,7 +149,6 @@ rweWL <- function(cur.data, ext.data, lambda, type = c("continuous", "binary"), 
                              fn     = f.ll,
                              lower  = c(-Inf, 1e-6, 1e-6), upper = rep(Inf,3),
                              control=list(fnscale=-1))$par[1];
-
     }
 
     rst;
