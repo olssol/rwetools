@@ -10,6 +10,8 @@ rwePsWL(data, lambdas, v.outcome = "Y", m.var = c("jk", "bs"),
 \arguments{
 \item{data}{class DWITHPS data frame}
 
+\item{lambdas}{power parameter without standardization by ns0}
+
 \item{m.var}{method to get variance: jackknife or bootstrap}
 
 \item{bs.n}{number of bootstraps}

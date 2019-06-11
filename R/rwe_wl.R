@@ -156,45 +156,45 @@ rweWL <- function(cur.data, ext.data, lambda, type = c("continuous", "binary"), 
 
 
 
-#' Weighted Likelihood Estimation
-#'
-#' @param cur.data data from current study
-#' @param ext.data data from external study
-#' @param type     type of outcomes
-#' @param ext.ps   ps of the external study
-#' @param equal.sd boolean. whether sd is the same between the current and external study
-#'
-#' @export
-#'
-rweWL2 <- function(cur.data, ext.data, ext.ps, type = c("continuous", "binary"), equal.sd = FALSE) {
+## #' Weighted Likelihood Estimation
+## #'
+## #' @param cur.data data from current study
+## #' @param ext.data data from external study
+## #' @param type     type of outcomes
+## #' @param ext.ps   ps of the external study
+## #' @param equal.sd boolean. whether sd is the same between the current and external study
+## #'
+## #' @export
+## #'
+## rweWL2 <- function(cur.data, ext.data, ext.ps, type = c("continuous", "binary"), equal.sd = FALSE) {
 
-    type       <- match.arg(type);
-    n1         <- length(cur.data);
-    init.theta <- mean(c(cur.data, ext.data));
-    init.sig   <- sd(c(cur.data, ext.data));
+##     type       <- match.arg(type);
+##     n1         <- length(cur.data);
+##     init.theta <- mean(c(cur.data, ext.data));
+##     init.sig   <- sd(c(cur.data, ext.data));
 
-    f.cont <- function(pars) {
-        theta  <- pars[1];
-        sig.1  <- exp(pars[2]);
-        sig.0  <- exp(pars[3]);
+##     f.cont <- function(pars) {
+##         theta  <- pars[1];
+##         sig.1  <- exp(pars[2]);
+##         sig.0  <- exp(pars[3]);
 
-        ll.1 <- dnorm(cur.data, theta, sd = sig.1, log = TRUE);
-        ll.0 <- dnorm(ext.data, theta, sd = sig.0, log = TRUE);
+##         ll.1 <- dnorm(cur.data, theta, sd = sig.1, log = TRUE);
+##         ll.0 <- dnorm(ext.data, theta, sd = sig.0, log = TRUE);
 
-        sum(ll.1) + sum(ll.0 * ext.ps);
-    }
+##         sum(ll.1) + sum(ll.0 * ext.ps);
+##     }
 
-    if ("continuous" == type) {
-        rst <- optim(c(init.theta, log(init.sig), log(init.sig)),
-                     method = "Nelder-Mead",
-                     fn     = f.cont,
-                     control=list(fnscale=-1))$par[1];
-    }  else {
-        A   <- sum(cur.data) + sum(ext.ps * ext.data);
-        B   <- sum(1 - cur.data) + sum( ext.ps * (1-ext.data));
-        rst <- A/(A+B);
-    }
+##     if ("continuous" == type) {
+##         rst <- optim(c(init.theta, log(init.sig), log(init.sig)),
+##                      method = "Nelder-Mead",
+##                      fn     = f.cont,
+##                      control=list(fnscale=-1))$par[1];
+##     }  else {
+##         A   <- sum(cur.data) + sum(ext.ps * ext.data);
+##         B   <- sum(1 - cur.data) + sum( ext.ps * (1-ext.data));
+##         rst <- A/(A+B);
+##     }
 
-    rst;
-}
+##     rst;
+## }
 

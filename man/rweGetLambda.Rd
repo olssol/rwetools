@@ -5,7 +5,7 @@
 \title{Get weights}
 \usage{
 rweGetLambda(A, rs = NULL, ns1.trt = NULL, ns1.ctl = NULL, ns0,
-  m.lambda = c("rs", "even"), ...)
+  m.lambda = c("rs", "even", "inverse"), ...)
 }
 \arguments{
 \item{A}{target number of subjects to be borrowed}
@@ -14,7 +14,7 @@ rweGetLambda(A, rs = NULL, ns1.trt = NULL, ns1.ctl = NULL, ns0,
 minimizing trt and control imbalance in numbers}
 }
 \value{
-power parameter
+power parameter before standardization
 }
 \description{
 Get weights

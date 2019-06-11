@@ -280,3 +280,86 @@ plotRweBalance <- function(data.withps, overall.inc = TRUE, v.cov = NULL,
     rst$rel_widths         <- c(rep(1, length(v.cov)-1), 1+legend.width*length(v.cov));
     do.call(plot_grid, rst);
 }
+
+
+##----------------------------------------------------------------------------
+##                BALANCE METRICS
+##----------------------------------------------------------------------------
+
+## overlapping coefficient
+metric.ovl <- function(cov0, cov1) {
+  cov <- c(cov0, cov1);
+  if (length(unique(cov)) <= 10) {
+    all.x <- c(rep(0, length(cov0)), rep(1, length(cov1)));
+    pt    <- apply(prop.table(table(cov, all.x), 2), 1, min);
+
+    ## reversed to measure imbalance
+    return(1-sum(pt))
+  }
+
+  mn <- min(cov)*1.25;
+  mx <- max(cov)*1.25;
+  f1 <- approxfun(density(cov1, from=mn, to=mx, bw="nrd"));
+  f0 <- approxfun(density(cov0, from=mn, to=mx, bw="nrd"));
+
+  fn <- function(x)
+    pmin(f1(x), f0(x))
+
+  s <- try(integrate(fn, lower = mn, upper = mx,
+                     subdivisions = 500)$value)
+  ##Reverse: measure imbalance
+  ifelse(inherits(s, "try-error"), NA, 1-s);
+}
+
+
+## K-S distance
+metric.ksd <- function(cov0, cov1) {
+    cov <- c(cov0, cov1);
+    F1  <- ecdf(cov1);
+    F0  <- ecdf(cov0);
+    max(abs(F1(cov) - F0(cov)));
+}
+
+## Levy distance
+metric.ley <- function(cov0, cov1) {
+    cov <- c(cov0, cov1);
+    F1  <- ecdf(cov1);
+    F0  <- ecdf(cov0);
+    e   <- max(abs(F1(cov) - F0(cov)));
+
+    if (length(unique(cov)) <= 10)
+        return(e)
+
+    x     <- seq(min(cov), max(cov), length.out=1000);
+    check <- all(F0(x-e) - e <= F1(x) & F1(x) <= F0(x+e) + e)
+
+    while (check) {
+        e <- e-.01
+        check <- all(F0(x-e) - e <= F1(x) & F1(x) <= F0(x+e) + e);
+    }
+
+    e
+}
+
+## mahalanobis balance
+## covs should be a reduced datset that contains only those covariates
+## that will be used for calculating Mahalanobis balance, for example,
+## covs=dat[,1:6]
+## trt should be the exposure variable, for example, trt=dat$X
+metric.mhb <- function(cov0, cov1) {
+  S    <- rbind(cov0, cov1);
+  Sinv <- solve(cov(S));
+  x0   <- colMeans(S[1:length(cov0),]);
+  x1   <- colMeans(S[-(1:length(cov0)),]);
+
+  sum((t(x1-x0) %*% Sinv) * (x1-x0))
+}
+
+
+
+
+
+
+
+
+
