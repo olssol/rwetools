@@ -60,7 +60,7 @@ rweUnbalance <- function(nPat, ..., pts = NULL, covs = NULL, diff = TRUE,
 #'
 rweBalMetric <- function(cov0, cov1, metric = c("std", "abd", "ovl", "ksd",
                                                 "ley", "mhb")) {
-    metric <- match(metric);
+    metric <- match.arg(metric);
     switch(metric,
            std = {
                s <- sqrt((var(cov1) + var(cov0))/2);
