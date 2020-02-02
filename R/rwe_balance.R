@@ -63,8 +63,8 @@ rweBalMetric <- function(cov0, cov1, metric = c("std", "abd", "ovl", "ksd",
     metric <- match.arg(metric);
     switch(metric,
            std = {
-               s <- sqrt((var(cov1) + var(cov0))/2);
-               abs(mean(cov1) - mean(cov0))/s;
+               s <- sqrt((var(cov1) + var(cov0)) / 2)
+               abs(mean(cov1) - mean(cov0)) / s;
            },
            abd = abs(mean(cov0) - mean(cov1)),
            ovl = metric.ovl(cov0, cov1),

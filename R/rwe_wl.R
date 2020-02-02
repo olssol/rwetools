@@ -20,7 +20,7 @@ rwePsWL <- function(data, lambdas, v.outcome = "Y", m.var = c("jk", "bs"),
         set.seed(seed);
 
     ## prepare data
-    data   <- data[!is.na(data[["_strata_"]]),];
+    data   <- data[!is.na(data[["_strata_"]]), ]
     S      <- max(data[["_strata_"]]);
 
     ## find mwle
@@ -66,23 +66,95 @@ rwePsWL <- function(data, lambdas, v.outcome = "Y", m.var = c("jk", "bs"),
             }
 
             var.mle <- (ns1+ns0-1)/(ns1+ns0)*sum((var.theta - cur.theta)^2);
+        } else {
+            var.mle <- 0
         }
 
         rst.theta <- rbind(rst.theta, c(ns1, cur.theta, var.mle, ns0));
     }
 
     ##mwle
-    ws       <- rst.theta[,1]/sum(rst.theta[,1]);
+    ws       <- rst.theta[,1] / sum(rst.theta[,1]);
     rst.mwle <- sum(ws * rst.theta[,2]);
     ##rst.bs   <- apply(rst.theta[,-(1:2), drop = FALSE], 2, function(x) sum(ws*x));
     rst.var  <- sum(ws^2 * rst.theta[,3]);
 
     list(mwle        = rst.mwle,
          var         = rst.var,
-         mwle.strata = rst.theta[,2],
-         var.strata  = rst.theta[,3],
-         ns1         = rst.theta[,1],
-         ns0         = rst.theta[,4]);
+         mwle.strata = rst.theta[, 2],
+         var.strata  = rst.theta[, 3],
+         ns1         = rst.theta[, 1],
+         ns0         = rst.theta[, 4])
+}
+
+
+
+#' PS-Integrated Composite Likelihood Estimation for all
+#' Jack-Knife values
+#'
+#' @param data class DWITHPS data frame
+#' @param ... parameters for \code{rweWL}
+#' @param lambdas power parameter without standardization by ns0
+#' @param seed random seed
+#'
+#' @export
+#'
+rwePsJkWL <- function(data, lambdas, v.outcome = "Y", ...) {
+
+    stopifnot(v.outcome %in% colnames(data));
+
+    ## prepare data
+    data[["_id_"]] <- 1:nrow(data)
+
+    data   <- data[!is.na(data[["_strata_"]]), ]
+    S      <- max(data[["_strata_"]]);
+
+    ## find mwle
+    rst_theta <- NULL;
+    for (i in 1:S) {
+        cur.d1 <- data[data[["_strata_"]] == i &
+                       data[["_grp_"]]    == 1, ]
+        cur.d0 <- data[data[["_strata_"]] == i &
+                       data[["_grp_"]]    == 0, ]
+
+        ns1 <- nrow(cur.d1)
+        ns0 <- nrow(cur.d0)
+
+        if (0 == ns1) {
+            stop(paste("Stratum ", i, " contains no subjects from group 1",
+                       sep = ""))
+        }
+
+        ## overall estimate
+        cur.lambda <- lambdas[i];
+        cur.theta  <- rweWL(cur.data = cur.d1[, v.outcome],
+                            ext.data = cur.d0[, v.outcome],
+                            lambda = cur.lambda, ...)
+
+        rst_theta  <- rbind(rst_theta,
+                            c(i, NA, NA, ns1, ns0, cur.theta))
+
+        for (j in 1:ns1) {
+            cur.theta <- rweWL(cur.data = cur.d1[-j, v.outcome],
+                               ext.data = cur.d0[, v.outcome],
+                               lambda = cur.lambda, ...)
+            rst_theta  <- rbind(rst_theta,
+                                c(i, 1, cur.d1[j, "_inx_"], ns1-1, ns0, cur.theta))
+        }
+
+        if (ns0 > 0) {
+            for (j in 1:ns0) {
+                cur.theta <- rweWL(cur.data = cur.d1[, v.outcome],
+                                   ext.data = cur.d0[-j, v.outcome],
+                                   lambda = cur.lambda, ...)
+                rst_theta  <- rbind(rst_theta,
+                                    c(i, 0, cur.d0[j, "_inx_"], ns1, ns0-1, cur.theta))
+            }
+        }
+
+    }
+    colnames(rst_theta) <- c("Strata", "Group", "Inx", "N1", "N0", "Theta")
+    data.frame(rst_theta)
 }
 
 

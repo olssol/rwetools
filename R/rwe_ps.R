@@ -18,12 +18,13 @@ rwePS <- function(data, ps.fml = NULL,
 
     ## generate formula
     if (is.null(ps.fml))
-        ps.fml <- as.formula(paste(v.grp, "~", paste(v.covs, collapse="+"), sep = ""));
+        ps.fml <- as.formula(paste(v.grp, "~", paste(v.covs, collapse = "+"), sep = ""))
 
     ## d1 index will be kept in the results
     d1.inx   <- d1.grp == data[[v.grp]];
     keep.inx <- which(d1.inx);
 
+    ## for 2-arm studies only
     if (!is.null(d1.arm))
         d1.inx <- d1.inx & d1.arm == data[[v.arm]];
 
@@ -79,7 +80,7 @@ rwePSDist <- function(data.withps, n.bins = 10, min.n0 = 10, type = c("ovl", "kl
 
     dataps   <- data.withps$data;
     nstrata  <- data.withps$nstrata;
-    rst     <- NULL;
+    rst      <- NULL;
     for (i in 1:nstrata) {
 
         inx.ps0 <- i == dataps[["_strata_"]] & 0 == dataps[["_grp_"]];

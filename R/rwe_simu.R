@@ -33,8 +33,8 @@ rweSimuCov <- function(nPat, muCov, sdCov, corCov, mix.phi = 1, seed = NULL, cov
         cur.sd  <- f.cur(sdCov, i);
         cur.cor <- corCov[min(i, length(corCov))];
         cur.x   <- rmvnorm(n.pts[i],
-                           mean=cur.mu,
-                           sigma=get.covmat(cur.sd, cur.cor));
+                           mean  = cur.mu,
+                           sigma = get.covmat(cur.sd, cur.cor));
         cov.x   <- rbind(cov.x, cur.x);
     }
 

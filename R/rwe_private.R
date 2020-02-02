@@ -297,20 +297,19 @@ metric.ovl <- function(cov0, cov1) {
     return(1-sum(pt))
   }
 
-  mn <- min(cov)*1.25;
-  mx <- max(cov)*1.25;
-  f1 <- approxfun(density(cov1, from=mn, to=mx, bw="nrd"));
-  f0 <- approxfun(density(cov0, from=mn, to=mx, bw="nrd"));
+  mn <- min(cov) * 1.25;
+  mx <- max(cov) * 1.25;
+  f1 <- approxfun(density(cov1, from = mn, to = mx, bw = "nrd"));
+  f0 <- approxfun(density(cov0, from = mn, to = mx, bw = "nrd"));
 
   fn <- function(x)
     pmin(f1(x), f0(x))
 
   s <- try(integrate(fn, lower = mn, upper = mx,
                      subdivisions = 500)$value)
-  ##Reverse: measure imbalance
-  ifelse(inherits(s, "try-error"), NA, 1-s);
+  ## Reverse: measure imbalance
+  ifelse(inherits(s, "try-error"), NA, 1-s)
 }
-
 
 ## K-S distance
 metric.ksd <- function(cov0, cov1) {

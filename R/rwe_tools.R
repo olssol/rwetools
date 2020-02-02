@@ -8,8 +8,8 @@
 #'
 #' @export
 #'
-rweCut <- function(x, y=x, breaks = 5, keep.inx = NULL) {
-    cuts    <- quantile(x, seq(0, 1,length=breaks+1));
+rweCut <- function(x, y = x, breaks = 5, keep.inx = NULL) {
+    cuts    <- quantile(x, seq(0, 1,length = breaks+1));
     cuts[1] <- cuts[1] - 0.001;
     rst     <- rep(NA, length(y));
     for (i in 2:length(cuts)) {

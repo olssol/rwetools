@@ -50,7 +50,7 @@ tkCallFun <- function(vec, ...) {
     eval(parse(text=paste("rst <- ",
                           paste(vec, collapse = ""),
                           "(...)",
-                          sep="")
+                          sep = "")
                )
          );
     rst
