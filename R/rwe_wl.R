@@ -139,7 +139,7 @@ rwePsJkWL <- function(data, lambdas, v.outcome = "Y", ...) {
                                ext.data = cur.d0[, v.outcome],
                                lambda = cur.lambda, ...)
             rst_theta  <- rbind(rst_theta,
-                                c(i, 1, cur.d1[j, "_inx_"], ns1-1, ns0, cur.theta))
+                                c(i, 1, cur.d1[j, "_id_"], ns1-1, ns0, cur.theta))
         }
 
         if (ns0 > 0) {
@@ -148,7 +148,7 @@ rwePsJkWL <- function(data, lambdas, v.outcome = "Y", ...) {
                                    ext.data = cur.d0[-j, v.outcome],
                                    lambda = cur.lambda, ...)
                 rst_theta  <- rbind(rst_theta,
-                                    c(i, 0, cur.d0[j, "_inx_"], ns1, ns0-1, cur.theta))
+                                    c(i, 0, cur.d0[j, "_id_"], ns1, ns0-1, cur.theta))
             }
         }
 
