@@ -1,11 +1,13 @@
 ##----------------------------------------------------------------------------
 ##                SETTING
 ##----------------------------------------------------------------------------
-get.rwe.class <- function(c.str = c("DWITHPS", "PSDIST")) {
+get.rwe.class <- function(c.str = c("DWITHPS", "PSDIST", "D_GPS", "GPSDIST")) {
     c.str <- match.arg(c.str);
     switch(c.str,
-           DWITHPS = "RWE_DWITHPS",
-           PSDIST  = "RWE_PSDIST");
+           DWITHPS  = "RWE_DWITHPS",
+           PSDIST   = "RWE_PSDIST",
+           D_GPS    = "RWE_D_GPS",
+           GPSDIST  = "RWE_GPSDIST")
 }
 
 

@@ -50,6 +50,107 @@ rwePS <- function(data, ps.fml = NULL,
     rst
 }
 
+#' Get generalized propensity scores
+#'
+#' @param ... parameters to get propensity scores
+#'
+#' @export
+#'
+rweGPS <- function(data, ps.fml = NULL,
+                    v.grp   = "group",
+                    v.covs  = "V1",
+                    nstrata = 5, ...) {
+
+    ## likelihood
+    f_ll <- function(beta) {
+        xbeta <- apply(d_mat, 1,
+                       function(x) sum(x * beta[-(1:nd1)]))
+
+        exb <- sapply(xbeta,
+                      function(x) {
+                          tx <- beta[1:nd1] + x
+                          tx <- 1 + sum(exp(tx))
+                          log(tx)
+                      })
+
+        rst <- sum(beta[1:nd1] * n_j)
+        rst <- rst + sum(xbeta[inx_j])
+        rst <- rst - sum(exb)
+        rst
+    }
+
+    f_gradient <- function(beta) {
+        xbeta <- apply(d_mat, 1,
+                       function(x) sum(x * beta[-(1:nd1)]))
+
+        exb <- sapply(xbeta,
+                      function(x) {
+                          tx <- beta[1:nd1] + x
+                          tx <- exp(tx)
+                      })
+        s_exb  <- apply(exb, 2, sum)
+        s_1exb <- sapply(s_exb, function(x) {1 / (1+x)})
+
+        g <- numeric(length(beta))
+        for (i in 1:nd1) {
+            g[i] <- n_j[i] - sum(s_1exb * exb[i,])
+        }
+
+        for (i in 1:nx) {
+            g[i + nd1] <- sum(d_mat[inx_j, i]) - sum(s_1exb * s_exb * d_mat[, i])
+        }
+
+        g
+    }
+
+    dnames <- colnames(data);
+    stopifnot(v.grp %in% dnames);
+
+    nd  <- max(data[[v.grp]])
+    nd1 <- nd - 1
+    n_j <- NULL
+    for (i in 2:nd) {
+        n_j <- c(n_j, sum(data[[v.grp]] == i))
+    }
+    inx_j <- which(data[[v.grp]] > 1)
+
+    ## design matrix
+    if (is.null(ps.fml))
+        ps.fml <- as.formula(paste(v.grp, "~", paste(v.covs, collapse = "+"), sep = ""))
+    d_mat <- model.matrix(ps.fml, data)[, -1]
+
+    ## mle
+    ## mle0 <- optim(rep(0, nd1 + NC), f_ll,
+    ##               method = "Nelder-Mead",
+    ##               control = list(fnscale = -1, ...))
+    mle <- optim(rep(0, nd1 + ncol(d_mat)),
+                 f_ll, gr = f_gradient,
+                 method = "BFGS", control = list(fnscale = -1, ...))
+
+    ps_par <- mle$par
+
+    ## gps and strata
+    gps    <- apply(d_mat, 1,
+                    function(x) sum(x * mle$par[-(1:nd1)]))
+
+    strata <- rweCut(gps[which(1 == data[[v.grp]])], gps, breaks = nstrata)
+
+    ## return
+    data[["_gps_"]]    <- gps
+    data[["_strata_"]] <- strata
+    data[["_grp_"]]    <- data[[v.grp]]
+
+    rst <- list(data    = data,
+                ps.fml  = ps.fml,
+                nd      = nd,
+                nstrata = nstrata,
+                mle     = mle)
+
+    class(rst) <- get.rwe.class("D_GPS");
+    rst
+}
+
+
 #' Get number of subjects and the distances of PS distributions for each PS
 #' strata
 #'
@@ -130,6 +231,77 @@ rwePSDist <- function(data.withps, n.bins = 10, min.n0 = 10, type = c("ovl", "kl
 
     rst
 }
+
+#' Get number of subjects and the distances of PS distributions for each PS
+#' strata for multiple data sources
+#'
+#' @param min.n0 threshold for N0, below which the external data in the
+#'     current stratum will be ignored by setting the PS distance to 0
+#'
+#' @param d1.arm calculate distance based on a specific arm. Ignored if NULL.
+#'
+#' @export
+#'
+rweGpsDist <- function(data.gps, n.bins = 10, min.n0 = 10, type = c("ovl", "kl"),  ...) {
+
+    stopifnot(inherits(data.gps,
+                       what = get.rwe.class("D_GPS")));
+
+    type     <- match.arg(type)
+    dataps   <- data.gps$data
+    nstrata  <- data.gps$nstrata
+    nd       <- data.gps$nd
+
+    rst      <- NULL
+    for (i in 1:nstrata) {
+        inx.ps1 <- i == dataps[["_strata_"]] & 1 == dataps[["_grp_"]]
+        ps1     <- dataps[which(inx.ps1), "_gps_"];
+        if (0 == length(ps1))
+            warning(paste("No samples in strata", i, "in current study"))
+
+        dist <- length(ps1)
+        for (j in 2:nd) {
+            inx.psj <- i == dataps[["_strata_"]] & j == dataps[["_grp_"]]
+            psj     <- dataps[which(inx.psj), "_gps_"]
+
+            if (0 == length(psj))
+                warning(paste("No samples in strata", i, "in Study", j))
+
+            if (length(psj) < min.n0) {
+                warning("Not enough data in the external data in the current stratum.")
+                cur_dist <- 0
+            } else {
+                cur_dist <- rweDist(psj, ps1, n.bins = n.bins, type = type, ...)
+            }
+
+            dist <- c(dist, length(psj), cur_dist)
+        }
+        rst <- rbind(rst, c(i, dist))
+    }
+
+    ##overall
+    inx.tot.ps1 <- which(1 == dataps[["_grp_"]]);
+    ps1         <- dataps[inx.tot.ps1, "_gps_"];
+
+    dist <- length(ps1)
+    for (j in 2:nd) {
+        inx.tot.psj <- which(j == dataps[["_grp_"]])
+        psj         <- dataps[inx.tot.psj, "_gps_"]
+        cur_dist    <- rweDist(psj, ps1, n.bins = nstrata * n.bins, type = type, ...)
+        dist        <- c(dist, length(psj), cur_dist)
+    }
+    rst <- rbind(rst, c(0, dist));
+
+
+    colnames(rst) <- c("Strata", "N1",
+                       paste(rep(c("N", "Dist"), nd - 1),
+                             rep(2:nd, each = 2), sep = ""))
+    rst           <- data.frame(rst);
+    class(rst)    <- append(get.rwe.class("GPSDIST"), class(rst));
+
+    rst
+}
+
 
 #' Get the actual power term in the power prior
 #'

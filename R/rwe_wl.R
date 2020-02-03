@@ -1,4 +1,7 @@
-#' PS-Integrated Weighted Likelihood Estimation for all stratum by bootstrap
+#' PS-Integrated Weighted Likelihood Estimation
+#'
+#' For all stratum. Variance estimated by bootstrap or Jack-Knife. Works for
+#' one- or two-arm studies when there is one RWD
 #'
 #' @param data class DWITHPS data frame
 #' @param ... parameters for \code{rweWL}
@@ -9,7 +12,7 @@
 #'
 #' @export
 #'
-rwePsWL <- function(data, lambdas, v.outcome = "Y", m.var = c("jk", "bs"),
+rwePsWl <- function(data, lambdas, v.outcome = "Y", m.var = c("jk", "bs"),
                     bs.n = 1000, seed = NULL, ...) {
 
     stopifnot(v.outcome %in% colnames(data));
@@ -89,8 +92,10 @@ rwePsWL <- function(data, lambdas, v.outcome = "Y", m.var = c("jk", "bs"),
 
 
 
-#' PS-Integrated Composite Likelihood Estimation for all
-#' Jack-Knife values
+#' PS-Integrated Composite Likelihood Estimation
+#'
+#' Return all Jack-Knife values for all stratum. Works for
+#' one--arm studies when there is one RWD
 #'
 #' @param data class DWITHPS data frame
 #' @param ... parameters for \code{rweWL}
@@ -99,7 +104,7 @@ rwePsWL <- function(data, lambdas, v.outcome = "Y", m.var = c("jk", "bs"),
 #'
 #' @export
 #'
-rwePsJkWL <- function(data, lambdas, v.outcome = "Y", ...) {
+rwePsJkWl <- function(data, lambdas, v.outcome = "Y", ...) {
 
     stopifnot(v.outcome %in% colnames(data));
 
@@ -138,8 +143,9 @@ rwePsJkWL <- function(data, lambdas, v.outcome = "Y", ...) {
             cur.theta <- rweWL(cur.data = cur.d1[-j, v.outcome],
                                ext.data = cur.d0[, v.outcome],
                                lambda = cur.lambda, ...)
+
             rst_theta  <- rbind(rst_theta,
-                                c(i, 1, cur.d1[j, "_id_"], ns1-1, ns0, cur.theta))
+                                c(i, 1, cur.d1[j, "_id_"], ns1 - 1, ns0, cur.theta))
         }
 
         if (ns0 > 0) {
@@ -158,12 +164,80 @@ rwePsJkWL <- function(data, lambdas, v.outcome = "Y", ...) {
 }
 
 
-#' Weighted Likelihood Estimation
+#' PS-Integrated Weighted Likelihood Estimation
+#'
+#' For all stratum. Variance estimated by Jack-Knife. Works for
+#' multiple external RWDs.
+#'
+#' @param data class D_GPS data frame
+#' @param ... parameters for \code{rweWL_G}
+#' @param lambdas matrix of number of patients to be borrowed
+#'
+#' @export
+#'
+rweGpsWl <- function(data, lambdas, v.outcome = "Y", ...) {
+
+    stopifnot(v.outcome %in% colnames(data));
+    ## prepare data
+    data   <- data[!is.na(data[["_strata_"]]), ]
+    S      <- max(data[["_strata_"]])
+    nd     <- max(data[["_grp_"]])
+
+    ## find mwle
+    rst_theta <- NULL;
+    for (i in 1:S) {
+        cur_d <- list()
+        ns_d  <- NULL
+        for (j in 1:nd) {
+            cur_d[[j]] <- data[data[["_strata_"]] == i & data[["_grp_"]] == j, v.outcome]
+            cur_n      <- length(cur_d[[j]])
+            if (0 == cur_n) {
+                stop(paste("Stratum ", i, " contains no subjects from group ", "j", sep = ""))
+            }
+            ns_d <- c(ns_d, cur_n)
+        }
+        cur_lambda <- c(ns_d[1], lambdas[i, ])
+
+        ## estimate
+        est_theta  <- rweWL_G(cur_d, lambda = cur_lambda, ...)
+
+        ## jackknife
+        jk_theta   <- NULL;
+        for (j in 1:nd) {
+            for (k in 1:ns_d[j]) {
+                cur_djk      <- cur_d
+                cur_djk[[j]] <- cur_djk[[j]][-k]
+                cur_theta    <- rweWL_G(cur_djk, lambda = cur_lambda, ...)
+                jk_theta     <- c(jk_theta, cur_theta);
+            }
+        }
+        var_theta <- (length(jk_theta)-1) / (length(jk_theta)) * sum((jk_theta - est_theta)^2)
+
+        rst_theta <- rbind(rst_theta,
+                           c(est_theta, var_theta, ns_d))
+    }
+
+    ##mwle
+    ws       <- rst_theta[, 3] / sum(rst_theta[, 3])
+    rst_mwle <- sum(ws * rst_theta[, 1])
+    rst_var  <- sum(ws^2 * rst_theta[, 2])
+
+    list(mwle        = rst_mwle,
+         var         = rst_var,
+         mwle.strata = rst_theta[, 1],
+         var.strata  = rst_theta[, 2],
+         ns1         = rst_theta[, 3],
+         nsj         = rst_theta[, -(1:3)])
+}
+
+
+
+#' Weighted Likelihood Estimation for one external RWD
 #'
 #' @param cur.data data from current study
 #' @param ext.data data from external study
 #' @param type     type of outcomes
-#' @param lambda   power parameter
+#' @param lambda   power parameter without standardization of ns0
 #' @param equal.sd boolean. whether sd is the same between the current and external study
 #'
 #' @export
@@ -226,6 +300,25 @@ rweWL <- function(cur.data, ext.data, lambda, type = c("continuous", "binary"), 
     rst;
 }
 
+
+#' Weighted Likelihood Estimation for general number of external RWDs
+#'
+#' @param dta list of data from each source including current study
+#' @param type type of outcomes
+#' @param lambda number of patients to be included or borrowed. For current
+#'     study, it should be equal to the number of patients
+#'
+#' @export
+#'
+rweWL_G <- function(lst_dta, lambda, type = c("continuous", "binary")) {
+    type     <- match.arg(type);
+    all_mean <- NULL
+    for (i in seq_len(length(lst_dta))) {
+        all_mean <- c(all_mean, mean(lst_dta[[i]]))
+    }
+
+    sum(all_mean * lambda / sum(lambda))
+}
 
 
 ## #' Weighted Likelihood Estimation

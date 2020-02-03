@@ -196,6 +196,42 @@ rweGetLambda <- function(A, rs = NULL, ns1.trt = NULL, ns1.ctl = NULL, ns0,
 }
 
 
+#' Get weights
+#'
+#' @param A target number of subjects to be borrowed
+#' @param m.lambda method to split A. rs: by overlapping coefficient; even: by
+#'     minimizing trt and control imbalance in numbers
+#'
+#' @return power parameter before standardization
+#'
+#' @export
+#'
+rweGpsLambda <- function(A, ps_dist) {
+    ps_dist <- ps_dist[which(ps_dist$Strata > 0), ]
+    inx     <- seq(4, ncol(ps_dist), by = 2)
+
+    ## average distance
+    avg   <- apply(ps_dist[, inx], 1, mean)
+    avg_a <- A * avg / sum(avg)
+
+    ## lambdas
+    lambdas <- apply(cbind(avg_a, ps_dist[, inx]),
+                     1,
+                     function(x) {
+                         x[-1] / sum(x[-1]) * x[1]
+                     })
+
+    ## minimum
+    rst <- apply(cbind(as.vector(t(lambdas)),
+                       as.vector(data.matrix(ps_dist[, inx-1]))
+                      ),
+                 1,
+                 min)
+
+    matrix(rst, nrow = nrow(ps_dist))
+}
+
+
 #' Summary statistics
 #'
 #'
@@ -203,15 +239,19 @@ rweGetLambda <- function(A, rs = NULL, ns1.trt = NULL, ns1.ctl = NULL, ns0,
 #'
 #' @export
 #'
-rweSummary <- function(cur.m, cur.var, cur.ci, true.theta) {
-    range.ci <- range(cur.ci);
+rweSummary <- function(cur.m, cur.var, true.theta,  cur.ci = NULL) {
     rst      <- c(thetahat = cur.m,
                   thetavar = cur.var,
                   bias     = cur.m - true.theta,
-                  mse      = (cur.m - true.theta)^2,
-                  width    = range.ci[2] - range.ci[1],
-                  cover    = true.theta >= range.ci[1] & true.theta <= range.ci[2],
-                  lb       = as.numeric(range.ci[1]),
-                  ub       = as.numeric(range.ci[2]));
+                  mse      = (cur.m - true.theta)^2)
+
+    if (!is.null(cur.ci)) {
+        range.ci <- range(cur.ci)
+        rst <- c(rst,
+                 width    = range.ci[2] - range.ci[1],
+                 cover    = true.theta >= range.ci[1] & true.theta <= range.ci[2],
+                 lb       = as.numeric(range.ci[1]),
+                 ub       = as.numeric(range.ci[2]))
+    }
     rst
 }
