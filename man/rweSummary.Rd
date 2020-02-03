@@ -4,7 +4,7 @@
 \alias{rweSummary}
 \title{Summary statistics}
 \usage{
-rweSummary(cur.m, cur.var, cur.ci, true.theta)
+rweSummary(cur.m, cur.var, true.theta, cur.ci = NULL)
 }
 \description{
 Summary statistics

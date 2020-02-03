@@ -2,7 +2,7 @@
 % Please edit documentation in R/rwe_wl.R
 \name{rweWL}
 \alias{rweWL}
-\title{Weighted Likelihood Estimation}
+\title{Weighted Likelihood Estimation for one external RWD}
 \usage{
 rweWL(cur.data, ext.data, lambda, type = c("continuous", "binary"),
   equal.sd = TRUE)
@@ -12,12 +12,12 @@ rweWL(cur.data, ext.data, lambda, type = c("continuous", "binary"),
 
 \item{ext.data}{data from external study}
 
-\item{lambda}{power parameter}
+\item{lambda}{power parameter without standardization of ns0}
 
 \item{type}{type of outcomes}
 
 \item{equal.sd}{boolean. whether sd is the same between the current and external study}
 }
 \description{
-Weighted Likelihood Estimation
+Weighted Likelihood Estimation for one external RWD
 }
