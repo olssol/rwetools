@@ -54,7 +54,7 @@ rweSimuCov <- function(nPat, muCov, sdCov, corCov, mix.phi = 1, seed = NULL, cov
 #'
 rweXBeta <- function(..., regCoeff, cov.x = NULL, fmla = NULL) {
 
-    stopifnot(inherits(fmla,"formula") | is.null(fmla));
+    stopifnot(inherits(fmla, "formula") | is.null(fmla));
 
     if (is.null(cov.x))
         cov.x <- rweSimuCov(...);
@@ -117,7 +117,8 @@ rweGetBinInt <- function(..., regCoeff, nPat=500000, xbeta = NULL, bin.mu = 0.5)
     rst <- NULL;
 
     for (i in 1:length(bin.mu)) {
-        cur.rst <- optimize(fx, c(-100-mey,100+mey), bmu = bin.mu[i])$minimum;
+        cur.rst <- optimize(fx, c(-100 - mey, 100 + mey),
+                            bmu = bin.mu[i])$minimum
         rst     <- c(rst, cur.rst);
     }
 
@@ -170,7 +171,6 @@ rweSimuSingleArm <- function(nPat, muCov, sdCov, corCov, regCoeff, mix.phi = 1, 
                         corCov     = corCov,
                         mix.phi    = mix.phi,
                         cov.breaks = cov.breaks);
-
     ##simulate Y
     if ("continuous" == type) {
         ## epsilon

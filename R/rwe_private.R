@@ -21,7 +21,6 @@ make.global <- function(alist, dest.env='.GlobalEnv') {
     }
 }
 
-
 expit <- function(x) {
     ex <- exp(x);
     ex/(1+ex);
@@ -29,10 +28,13 @@ expit <- function(x) {
 
 get.xbeta <- function(covX, regCoeff) {
     if (length(regCoeff) > 0 &
-        length(regCoeff) != ncol(covX))
-        warning("Number of coefficients does not match with the design matrix.");
+        length(regCoeff) != ncol(covX)) {
+        stop("Number of coefficients does not match with the design matrix.")
+    }
 
-    apply(covX, 1, function(x) {sum(x * regCoeff)});
+    apply(covX, 1, function(x) {
+        sum(x * regCoeff)}
+        )
 }
 
 
@@ -61,9 +63,9 @@ get.cov.cat <- function(covX, breaks = NULL) {
         if (is.null(bs))
             return(x);
 
-        bs  <- sort(unique(c(-Inf, bs, Inf)));
-        rst <- as.numeric(cut(x, breaks = bs)) - 1;
-        factor(rst);
+        ibs <- sort(unique(c(-Inf, bs, Inf)));
+        rst <- as.numeric(cut(x, breaks = ibs)) - 1;
+        factor(rst, levels = 0:length(bs))
     }
 
     if (is.null(breaks))
