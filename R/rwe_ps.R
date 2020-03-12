@@ -34,19 +34,21 @@ rwePS <- function(data, ps.fml = NULL,
     D1.ps   <- all.ps[which(d1.inx)];
 
     ## stratification
-    strata  <- rweCut(D1.ps, all.ps, breaks = nstrata, keep.inx = keep.inx);
-    grp     <- rep(1, nrow(data));
-    grp[which(data[[v.grp]] != d1.grp)] <- 0;
+    if (nstrata > 0) {
+        strata  <- rweCut(D1.ps, all.ps, breaks = nstrata, keep.inx = keep.inx);
+        grp     <- rep(1, nrow(data));
+        grp[which(data[[v.grp]] != d1.grp)] <- 0;
 
-    data[["_ps_"]]     <- all.ps;
-    data[["_strata_"]] <- strata;
-    data[["_grp_"]]    <- grp;
-    data[["_arm_"]]    <- data[[v.arm]];
+        data[["_ps_"]]     <- all.ps;
+        data[["_strata_"]] <- strata;
+        data[["_grp_"]]    <- grp;
+        data[["_arm_"]]    <- data[[v.arm]];
+    }
 
+    ## return
     rst <- list(data    = data,
                 ps.fml  = ps.fml,
                 nstrata = nstrata);
-
     class(rst) <- get.rwe.class("DWITHPS");
 
     rst
@@ -163,7 +165,8 @@ rweGPS <- function(data, ps.fml = NULL,
 #'
 #' @export
 #'
-rwePSDist <- function(data.withps, n.bins = 10, min.n0 = 10, type = c("ovl", "kl"), d1.arm = NULL, ...) {
+rwePSDist <- function(data.withps, n.bins = 10, min.n0 = 10,
+                      type = c("ovl", "kl"), d1.arm = NULL, ...) {
 
     f.narm <- function(inx, dataps) {
 
@@ -206,7 +209,8 @@ rwePSDist <- function(data.withps, n.bins = 10, min.n0 = 10, type = c("ovl", "kl
             warning("NA found in propensity scores in a strata");
 
         if (length(ps0) < min.n0) {
-            warning("Not enough data in the external data in the current stratum. External data ignored.");
+            warning("Not enough data in the external data in the current stratum.
+                     External data ignored.");
             cur.dist <- 0;
         } else {
             cur.dist <- rweDist(ps0, ps1, n.bins = n.bins, type = type, ...);
@@ -215,7 +219,7 @@ rwePSDist <- function(data.withps, n.bins = 10, min.n0 = 10, type = c("ovl", "kl
         rst <- rbind(rst, c(i, n0.01, n1.01, cur.dist));
     }
 
-    ##overall
+    ## overall
     inx.tot.ps0 <- which(0 == dataps[["_grp_"]]);
     inx.tot.ps1 <- which(1 == dataps[["_grp_"]]);
     n0.tot.01   <- f.narm(inx.tot.ps0, dataps);
@@ -345,6 +349,26 @@ rweGetPowerA <- function(psdist, a = NULL, overall.ess = 0.3,
 
     list(a  = a,
          as = rst);
+}
+
+#' Match on PS
+#'
+#' Match patients in RWD with patients in current study based on PS
+#'
+#' @param dta_cur current study data
+#' @param dta_ext external data source data
+#'
+#' @export
+#'
+rwe_match_ps <- function(dta_cur, dta_ext, n_match = 3, ps.fml = NULL, v.covs  = "V1") {
+    dta_cur$grp_tmp <- 1
+    dta_ext$grp_tmp <- 0
+
+    dta    <- rbind(dta_cur, dta_ext)
+    dta_ps <- rwePS(data = dta, v.grp = "grp_tmp", v.covs = v.covs, nstrata = 0)
+
+    
+    dta_ps
 }
 
 ## -----------------------------------------------------------------------------

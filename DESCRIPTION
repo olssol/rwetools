@@ -1,30 +1,28 @@
 Package: rwetools
 Title: R functions for real-world data analysis 
-Version: 5.0
+Version: 5.2
 Author: Chenguang Wang [aut, cre]
         Trustees of Columbia University [cph] (tools/make_cpp.R, R/stanmodels.R)
 Maintainer: Chenguang Wang <chenguang.wang.0517@gmail.com>
 Description: R functions for synthesizing real-world evidence in clinical trial design and analysis.
-Depends: R (>= 3.4.0),
-         Rcpp (>= 0.12.0),
-         methods
-LinkingTo: StanHeaders (>= 2.18.0),
-           rstan (>= 2.18.1),
-           BH (>= 1.66.0),
-           Rcpp (>= 0.12.0),
-           RcppEigen (>= 0.3.3.3.0)
-RcppModules: stan_fit4powerp_mod,
-             stan_fit4powerps_mod,
-             stan_fit4powerpsbinary_mod,
-             stan_fit4prior_mod
-Imports: rstan (>= 2.18.1),
-         rstantools (>= 1.5.0),
-         parallel (>= 3.2),
-         randomForest (>= 4.6),
-         cowplot,
-         dplyr,
-         ggplot2,
-         mvtnorm
+Depends:
+    methods,
+    R (>= 3.5.0),
+    rstan (>= 2.19.2),
+    Rcpp (>= 1.0.2)
+LinkingTo:
+    BH (>= 1.69.0-1),
+    Rcpp (>= 1.0.2),
+    rstan (>= 2.14),
+    RcppEigen (>= 0.3.3.5.0),
+    StanHeaders (>= 2.18.1-10)
+RcppModules:
+    stan_fit4powerp_mod,
+    stan_fit4powerps_mod,
+    stan_fit4powerpsbinary_mod,
+    stan_fit4prior_mod
+Imports:
+    parallel (>= 3.2),
 Encoding: UTF-8
 LazyData: true
 ByteCompile: true
