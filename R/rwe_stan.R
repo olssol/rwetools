@@ -39,7 +39,8 @@ rweSTAN <- function(lst.data, stan.mdl = "powerp",
 #'
 #' @export
 #'
-rwePsPowDrawPost <- function(data, type = c("continuous", "binary"), A = 0, RS = NULL, Fix.RS = FALSE,
+rwePsPowDrawPost <- function(data, type = c("continuous", "binary"),
+                             A = 0, RS = NULL, Fix.RS = FALSE,
                              v.outcome = "Y",  ...) {
 
     stopifnot(v.outcome %in% colnames(data));

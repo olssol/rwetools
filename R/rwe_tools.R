@@ -256,3 +256,131 @@ rweSummary <- function(cur.m, cur.var, true.theta,  cur.ci = NULL) {
     }
     rst
 }
+
+
+#' Combining simulation results
+#'
+#' @param lst.rst List of simulation results. Each element represents a
+#'     replication
+#'
+#' @export
+#'
+rweSimuCombine <- function(lst.rst, fun = mean, ignore.error = TRUE, ...) {
+    if (ignore.error) {
+        err.inx <- NULL;
+        for (i in 1:length(lst.rst)) {
+            if ("try-error" == class(lst.rst[[i]]))
+                err.inx <- c(err.inx, i);
+        }
+
+        if (!is.null(err.inx))
+            lst.rst <- lst.rst[-err.inx];
+    }
+
+    nreps       <- length(lst.rst);
+    rep1        <- lst.rst[[1]];
+    lst.combine <- rep(list(NULL), length(rep1));
+    for (i in 1:nreps) {
+        for (j in 1:length(rep1)) {
+            cur.value        <- lst.rst[[i]][[j]];
+            lst.combine[[j]] <- rbind(lst.combine[[j]],
+                                      as.vector(as.matrix(cur.value)));
+        }
+    }
+
+    for (j in 1:length(lst.combine)) {
+        cur.rst           <- apply(lst.combine[[j]], 2, fun, ...);
+        dim(cur.rst)      <- dim(as.matrix(rep1[[j]]));
+        dimnames(cur.rst) <- dimnames(as.matrix(rep1[[j]]));
+        lst.combine[[j]]  <- cur.rst;
+    }
+
+    names(lst.combine) <- names(rep1);
+    lst.combine
+}
+
+
+
+## --------------------------------------------------------------------------------
+## --------------------------------------------------------------------------------
+##             PRIVATE FUNCTIONS
+## --------------------------------------------------------------------------------
+## --------------------------------------------------------------------------------
+
+get.rwe.class <- function(c.str = c("DWITHPS", "PSDIST", "D_GPS", "GPSDIST")) {
+    c.str <- match.arg(c.str);
+    switch(c.str,
+           DWITHPS  = "RWE_DWITHPS",
+           PSDIST   = "RWE_PSDIST",
+           D_GPS    = "RWE_D_GPS",
+           GPSDIST  = "RWE_GPSDIST")
+}
+
+
+make.global <- function(alist, dest.env='.GlobalEnv') {
+    for (i in 1:length(alist)) {
+        assign(names(alist[i]), alist[[i]], dest.env );
+    }
+}
+
+expit <- function(x) {
+    ex <- exp(x);
+    ex/(1+ex);
+}
+
+get.xbeta <- function(covX, regCoeff) {
+    if (length(regCoeff) > 0 &
+        length(regCoeff) != ncol(covX)) {
+        stop("Number of coefficients does not match with the design matrix.")
+    }
+
+    apply(covX, 1, function(x) {
+        sum(x * regCoeff)}
+        )
+}
+
+get.covmat <- function(StDevCovar, corrCovar) {
+    n.x      <- length(StDevCovar);
+    Vars     <- StDevCovar*StDevCovar;
+    CovarMat <- matrix(NA, n.x, n.x);
+    for (i in 1:n.x) {
+        CovarMat[i,i] <- Vars[i];
+        for (j in i:n.x) {
+            if (j == i) {
+                CovarMat[i,i] <- Vars[i];
+                next;
+            }
+            CovarMat[i, j] <- corrCovar*StDevCovar[i]*StDevCovar[j];
+            CovarMat[j, i] <- CovarMat[i, j];
+        }
+    }
+
+    CovarMat
+}
+
+## cut covariates into categories
+get.cov.cat <- function(covX, breaks = NULL) {
+    f.cut <- function(x, bs) {
+        if (is.null(bs))
+            return(x);
+
+        ibs <- sort(unique(c(-Inf, bs, Inf)));
+        rst <- as.numeric(cut(x, breaks = ibs)) - 1;
+        factor(rst, levels = 0:length(bs))
+    }
+
+    if (is.null(breaks))
+        return(covX);
+
+    if (is.numeric(breaks)) {
+        rst <- apply(covX, 1, f.cut, breaks);
+        rst <- t(rst);
+    } else if (is.list(breaks)) {
+        rst <- covX;
+        for (i in 1:min(ncol(covX), length(breaks))) {
+            rst[,i] <- f.cut(covX[,i], breaks[[i]]);
+        }
+    }
+
+    rst
+}

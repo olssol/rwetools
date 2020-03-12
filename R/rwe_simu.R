@@ -158,7 +158,8 @@ rweSimuError <- function(nPat,
 #'
 #' @export
 #'
-rweSimuSingleArm <- function(nPat, muCov, sdCov, corCov, regCoeff, mix.phi = 1, cov.breaks = NULL,
+rweSimuSingleArm <- function(nPat, muCov, sdCov, corCov, regCoeff, mix.phi = 1,
+                             cov.breaks = NULL,
                              fmla = NULL,
                              type = c("continuous", "binary"),
                              ysig = NULL, sig2Ratio=1, b0 = NULL, bin.mu = 0.5,
@@ -223,6 +224,7 @@ rweSimuTwoArm <- function(nPat, muCov, sdCov, corCov, trt.effect = 0,
                           fmla.y = NULL, fmla.z = NULL, ysig = NULL,
                           b0 = NULL, z1.p = 0.5,
                           sig2Ratio = 2,  ..., do.simu=TRUE) {
+
     ##treatment assignment
     if (is.null(b0)) {
         b0  <- rweGetBinInt(bin.mu   = z1.p,
@@ -359,43 +361,3 @@ rweSimuFromTrial <- function(nPat, trial.data, group = "A", outcome = "Y",
 }
 
 
-#' Combining simulation results
-#'
-#' @param lst.rst List of simulation results. Each element represents a
-#'     replication
-#' @export
-#'
-rweSimuCombine <- function(lst.rst, fun = mean, ignore.error = TRUE, ...) {
-
-    if (ignore.error) {
-        err.inx <- NULL;
-        for (i in 1:length(lst.rst)) {
-            if ("try-error" == class(lst.rst[[i]]))
-                err.inx <- c(err.inx, i);
-        }
-
-        if (!is.null(err.inx))
-            lst.rst <- lst.rst[-err.inx];
-    }
-
-    nreps       <- length(lst.rst);
-    rep1        <- lst.rst[[1]];
-    lst.combine <- rep(list(NULL), length(rep1));
-    for (i in 1:nreps) {
-        for (j in 1:length(rep1)) {
-            cur.value        <- lst.rst[[i]][[j]];
-            lst.combine[[j]] <- rbind(lst.combine[[j]],
-                                      as.vector(as.matrix(cur.value)));
-        }
-    }
-
-    for (j in 1:length(lst.combine)) {
-        cur.rst           <- apply(lst.combine[[j]], 2, fun, ...);
-        dim(cur.rst)      <- dim(as.matrix(rep1[[j]]));
-        dimnames(cur.rst) <- dimnames(as.matrix(rep1[[j]]));
-        lst.combine[[j]]  <- cur.rst;
-    }
-
-    names(lst.combine) <- names(rep1);
-    lst.combine
-}

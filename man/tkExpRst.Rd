@@ -4,7 +4,8 @@
 \alias{tkExpRst}
 \title{Export results into a template file}
 \usage{
-tkExpRst(numbers, template.f, out.f = "rst.txt", sub.str = "AA")
+tkExpRst(numbers, template.f, out.f = "rst.txt", sub.str = "AA",
+  append = TRUE)
 }
 \arguments{
 \item{numbers}{vector of results}

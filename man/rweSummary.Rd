@@ -2,10 +2,12 @@
 % Please edit documentation in R/rwe_tools.R
 \name{rweSummary}
 \alias{rweSummary}
-\title{Summary statistics}
+\title{Summary statistics
+l}
 \usage{
 rweSummary(cur.m, cur.var, true.theta, cur.ci = NULL)
 }
 \description{
 Summary statistics
+l
 }

@@ -18,7 +18,9 @@ rwePS <- function(data, ps.fml = NULL,
 
     ## generate formula
     if (is.null(ps.fml))
-        ps.fml <- as.formula(paste(v.grp, "~", paste(v.covs, collapse = "+"), sep = ""))
+        ps.fml <- as.formula(paste(v.grp, "~",
+                                   paste(v.covs, collapse = "+"),
+                                   sep = ""))
 
     ## d1 index will be kept in the results
     d1.inx   <- d1.grp == data[[v.grp]];
@@ -313,7 +315,8 @@ rweGpsDist <- function(data.gps, n.bins = 10, min.n0 = 10, type = c("ovl", "kl")
 #'
 #' @export
 #'
-rweGetPowerA <- function(psdist, a = NULL, overall.ess = 0.3, adjust.size = TRUE, adjust.dist = TRUE) {
+rweGetPowerA <- function(psdist, a = NULL, overall.ess = 0.3,
+                         adjust.size = TRUE, adjust.dist = TRUE) {
 
     stopifnot(inherits(psdist, what = get.rwe.class("PSDIST")));
 
@@ -343,3 +346,40 @@ rweGetPowerA <- function(psdist, a = NULL, overall.ess = 0.3, adjust.size = TRUE
     list(a  = a,
          as = rst);
 }
+
+## -----------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
+##             PRIVATE FUNCTIONS
+## -----------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
+
+## compute propensity scores
+get.ps <- function(dta, ps.fml, type = c("randomforest", "logistic"),
+                   ntree = 5000,
+                   ..., grp = NULL, ps.cov = NULL) {
+
+    type <- match.arg(type);
+
+    ## generate formula
+    if (is.null(ps.fml))
+        ps.fml <- as.formula(paste(grp, "~", paste(ps.cov, collapse="+"),
+                                   sep=""));
+
+    ## identify grp if passed from formula
+    grp <- all.vars(ps.fml)[1];
+
+    ## fit model
+    switch(type,
+           logistic = {
+               glm.fit <- glm(ps.fml, family=binomial, data=dta, ...);
+               est.ps <- glm.fit$fitted;
+           },
+           randomforest = {
+               dta[[grp]] <- as.factor(dta[[grp]]);
+               rf.fit     <- randomForest(ps.fml, data = dta,
+                                          ntree = ntree, ...);
+               est.ps     <- predict(rf.fit, type = "prob")[,2];
+           });
+    est.ps
+}
+
