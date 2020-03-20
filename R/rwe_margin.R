@@ -37,8 +37,9 @@ rwe_margin_sample <- function(target_stats, dta_ext,
     list(selected = dta_ext[1 == best_selected, ],
          ext_ind  = best_selected,
          distance = best_val$distance,
+         diff     = best_val$diff,
          stats    = best_val$stats,
-         target   = lst_stats)
+         target   = target_stats)
 }
 
 
@@ -50,8 +51,8 @@ rwe_margin_sample <- function(target_stats, dta_ext,
 #'
 #' @export
 #'
-rwe_margin_simu <- function(lst_stats, n = 500) {
-    rst <- lapply(lst_stats, private_margin_simu)
+rwe_margin_simu <- function(target_stats, n = 500) {
+    rst <- lapply(target_stats, private_margin_simu)
     rst <- data.frame(rst)
 }
 
@@ -64,11 +65,11 @@ rwe_margin_simu <- function(lst_stats, n = 500) {
 #'
 #' @export
 #'
-rwe_margin_ll <- function(lst_stats, y) {
+rwe_margin_ll <- function(target_stats, y) {
     rst <- NULL
-    for (i in seq_len(length(lst_stats))) {
-        cur_stats <- lst_stats[[i]]
-        cur_y     <- y[[names(lst_stats)[i]]]
+    for (i in seq_len(length(target_stats))) {
+        cur_stats <- target_stats[[i]]
+        cur_y     <- y[[names(target_stats)[i]]]
         cur_ll    <- private_margin_ll(cur_stats, cur_y)
         rst       <- cbind(rst, cur_ll)
     }
@@ -90,12 +91,12 @@ rwe_margin_ll <- function(lst_stats, y) {
 #'
 #' @export
 #'
-rwe_extract_stats <- function(lst_stats, y) {
+rwe_extract_stats <- function(target_stats, y) {
     rst <- list()
-    for (i in seq_len(length(lst_stats))) {
-        cur_v   <- names(lst_stats)[i]
+    for (i in seq_len(length(target_stats))) {
+        cur_v   <- names(target_stats)[i]
         cur_y   <- y[[cur_v]]
-        cur_s   <- lst_stats[[i]]
+        cur_s   <- target_stats[[i]]
 
         cur_rst <- switch(
             cur_s$type,
@@ -114,17 +115,17 @@ rwe_extract_stats <- function(lst_stats, y) {
 #'
 #' @export
 #'
-rwe_margin_stat_diff <- function(lst_stats, y, type = c("max", "sum"),
+rwe_margin_stat_diff <- function(target_stats, y, type = c("max", "sum"),
                                  epsilon = NULL, ...) {
 
     type        <- match.arg(type)
-    lst_stats_y <- rwe_extract_stats(lst_stats, y)
+    target_stats_y <- rwe_extract_stats(target_stats, y)
 
     ## all differences
     rst <- NULL
-    for (i in seq_len(length(lst_stats))) {
-        cur_diff <- private_stat_diff(lst_stats[[i]],
-                                      lst_stats_y[[i]])
+    for (i in seq_len(length(target_stats))) {
+        cur_diff <- private_stat_diff(target_stats[[i]],
+                                      target_stats_y[[i]])
         rst      <- c(rst, cur_diff)
     }
 
@@ -139,7 +140,7 @@ rwe_margin_stat_diff <- function(lst_stats, y, type = c("max", "sum"),
     if (!is.null(epsilon))
         yn <- dist < epsilon
 
-    list(stats      = lst_stats_y,
+    list(stats      = target_stats_y,
          diff       = rst,
          distance   = dist,
          acceptable = yn)
@@ -160,7 +161,7 @@ rwe_margin_stat_diff <- function(lst_stats, y, type = c("max", "sum"),
 ##
 ## @return column vector with n patients
 ##
-private_margin_simu <- function(lst_stats, n = 500) {
+private_margin_simu <- function(target_stats, n = 500) {
     ## sample based on quantiles
     fsmp_quants <- function(n, range, quants) {
         qmat <- private_quantile_mat(range, quants)
@@ -173,20 +174,20 @@ private_margin_simu <- function(lst_stats, n = 500) {
         rst
     }
 
-    rst <- switch(lst_stats$type,
+    rst <- switch(target_stats$type,
                   discrete = {
-                      smps <- sample(seq_len(length(lst_stats$values)),
+                      smps <- sample(seq_len(length(target_stats$values)),
                                      size    = n,
                                      replace = TRUE,
-                                     prob    = lst_stats$probs)
-                      factor(lst_stats$values[smps])
+                                     prob    = target_stats$probs)
+                      factor(target_stats$values[smps])
                   },
                   continuous = rnorm(n,
-                                     lst_stats$mean,
-                                     lst_stats$sd),
+                                     target_stats$mean,
+                                     target_stats$sd),
                   quants = fsmp_quants(n,
-                                       lst_stats$range,
-                                       lst_stats$quants),
+                                       target_stats$range,
+                                       target_stats$quants),
                   NULL)
     rst
 }
@@ -196,11 +197,11 @@ private_margin_simu <- function(lst_stats, n = 500) {
 ## Calculate likelihood of a covariate based on its summary statistics
 ##
 ## @param y vector of data
-## @param lst_stats summary statistics
+## @param target_stats summary statistics
 ##
 ## @return column vector with n patients
 ##
-private_margin_ll <- function(lst_stats, y) {
+private_margin_ll <- function(target_stats, y) {
     ## ll based proportions
     f_dis <- function(y, values, probs) {
         lp <- log(probs)
@@ -209,9 +210,9 @@ private_margin_ll <- function(lst_stats, y) {
         }, simplify = TRUE)
     }
 
-    rst <- switch(lst_stats$type,
-                  discrete   = f_dis(y, lst_stats$values, lst_stats$probs),
-                  continuous = dnorm(y, lst_stats$mean, lst_stats$sd,
+    rst <- switch(target_stats$type,
+                  discrete   = f_dis(y, target_stats$values, target_stats$probs),
+                  continuous = dnorm(y, target_stats$mean, target_stats$sd,
                                      log = TRUE),
                   NULL)
     rst
@@ -330,7 +331,7 @@ private_margin_sample_naive <- function(target_stats, dta_ext, n_min = 300,
             best_selected <- cur_rst$selected
             best_val      <- cur_rst$val
 
-            cat("-----", k, sum(best_selected), best_val$distance, "\n")
+            ## cat("-----", k, sum(best_selected), best_val$distance, "\n")
         }
 
         k <- k + 1
@@ -384,7 +385,7 @@ private_margin_sample_sa <- function(target_stats, dta_ext, n_min = 300,
 
     ## set weights
     if (weighted) {
-        weights <- rwe_margin_ll(lst_stats, dta_ext)[, "weights"]
+        weights <- rwe_margin_ll(target_stats, dta_ext)[, "weights"]
     } else {
         weights <- rep(1/nrow(dta_ext), nrow(dta_ext))
     }
@@ -419,7 +420,7 @@ private_margin_sample_sa <- function(target_stats, dta_ext, n_min = 300,
             best_selected <- cur_selected
             best_val      <- cur_val
 
-            cat("-----", k, sum(best_selected), best_val$distance, "\n")
+            ## cat("-----", k, sum(best_selected), best_val$distance, "\n")
         }
 
         k <- k + 1
@@ -457,7 +458,7 @@ private_margin_sample_rf <- function(target_stats, dta_ext, n_min = 300,
     ## current distance
     f_dis <- function(ind_selected) {
         cur_sel  <- which(1 == ind_selected)
-        rst_dist <- rwe_margin_stat_diff(lst_stats,
+        rst_dist <- rwe_margin_stat_diff(target_stats,
                                          y = dta_ext[cur_sel, ],
                                          type = type)
         rst_dist
@@ -469,7 +470,7 @@ private_margin_sample_rf <- function(target_stats, dta_ext, n_min = 300,
 
     ## set weights
     if (weighted) {
-        weights <- rwe_margin_ll(lst_stats, dta_ext)[, "weights"]
+        weights <- rwe_margin_ll(target_stats, dta_ext)[, "weights"]
     } else {
         weights <- rep(1/nrow(dta_ext), nrow(dta_ext))
     }
