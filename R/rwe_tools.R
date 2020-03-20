@@ -359,7 +359,7 @@ get.covmat <- function(StDevCovar, corrCovar) {
 }
 
 ## cut covariates into categories
-get.cov.cat <- function(covX, breaks = NULL) {
+get_cov_cat <- function(covX, breaks = NULL) {
     f.cut <- function(x, bs) {
         if (is.null(bs))
             return(x);
@@ -378,7 +378,8 @@ get.cov.cat <- function(covX, breaks = NULL) {
     } else if (is.list(breaks)) {
         rst <- covX;
         for (i in 1:min(ncol(covX), length(breaks))) {
-            rst[,i] <- f.cut(covX[,i], breaks[[i]]);
+            rst[,i] <- f.cut(covX[,i],
+                             breaks[[i]]);
         }
     }
 

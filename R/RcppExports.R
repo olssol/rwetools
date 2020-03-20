@@ -11,3 +11,16 @@ crtTest <- function(test) {
     .Call(`_rwetools_crtTest`, test)
 }
 
+#' Match by nearest neighbor
+#'
+#' Match subjects in group candidate with subject in the target group
+#'
+#' @param target  vector of data from the target group
+#' @param candidates vector of data from the candidate group
+#' @param ratio  1:ratio match
+#'
+#' @export
+cMatch <- function(target, candidate, ratio) {
+    .Call(`_rwetools_cMatch`, target, candidate, ratio)
+}
+

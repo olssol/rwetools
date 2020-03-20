@@ -4,7 +4,8 @@
 \alias{rwe_margin_stat_diff}
 \title{Calculate differences in summary statistics}
 \usage{
-rwe_margin_stat_diff(lst_stats, y)
+rwe_margin_stat_diff(lst_stats, y, type = c("max", "sum"),
+  epsilon = NULL, ...)
 }
 \value{
 vector of differences in summary statistics

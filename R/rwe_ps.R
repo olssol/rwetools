@@ -30,19 +30,24 @@ rwePS <- function(data, ps.fml = NULL,
     if (!is.null(d1.arm))
         d1.inx <- d1.inx & d1.arm == data[[v.arm]];
 
-    all.ps  <- get.ps(data, ps.fml = ps.fml, ...);
+    ## get ps
+    all.ps  <- get_ps(data, ps.fml = ps.fml, ...);
     D1.ps   <- all.ps[which(d1.inx)];
+
+
+    ## add columns to data
+    grp     <- rep(1, nrow(data));
+    grp[which(data[[v.grp]] != d1.grp)] <- 0;
+
+    data[["_ps_"]]     <- all.ps;
+    data[["_grp_"]]    <- grp;
+    data[["_arm_"]]    <- data[[v.arm]];
+
 
     ## stratification
     if (nstrata > 0) {
         strata  <- rweCut(D1.ps, all.ps, breaks = nstrata, keep.inx = keep.inx);
-        grp     <- rep(1, nrow(data));
-        grp[which(data[[v.grp]] != d1.grp)] <- 0;
-
-        data[["_ps_"]]     <- all.ps;
         data[["_strata_"]] <- strata;
-        data[["_grp_"]]    <- grp;
-        data[["_arm_"]]    <- data[[v.arm]];
     }
 
     ## return
@@ -274,7 +279,8 @@ rweGpsDist <- function(data.gps, n.bins = 10, min.n0 = 10, type = c("ovl", "kl")
                 warning(paste("No samples in strata", i, "in Study", j))
 
             if (length(psj) < min.n0) {
-                warning("Not enough data in the external data in the current stratum.")
+                warning("Not enough data in the external data in
+                         the current stratum.")
                 cur_dist <- 0
             } else {
                 cur_dist <- rweDist(psj, ps1, n.bins = n.bins, type = type, ...)
@@ -293,7 +299,8 @@ rweGpsDist <- function(data.gps, n.bins = 10, min.n0 = 10, type = c("ovl", "kl")
     for (j in 2:nd) {
         inx.tot.psj <- which(j == dataps[["_grp_"]])
         psj         <- dataps[inx.tot.psj, "_gps_"]
-        cur_dist    <- rweDist(psj, ps1, n.bins = nstrata * n.bins, type = type, ...)
+        cur_dist    <- rweDist(psj, ps1, n.bins = nstrata * n.bins,
+                               type = type, ...)
         dist        <- c(dist, length(psj), cur_dist)
     }
     rst <- rbind(rst, c(0, dist));
@@ -311,10 +318,11 @@ rweGpsDist <- function(data.gps, n.bins = 10, min.n0 = 10, type = c("ovl", "kl")
 
 #' Get the actual power term in the power prior
 #'
-#' @param psdist      A RWE_PSDIST type object
-#' @param a           power term
+#' @param psdist A RWE_PSDIST type object
+#' @param a power term
 #' @param overall.ess ratio of overall added number of patients to N1
-#' @param adjust.size whether adjust for sizes in group 0 and 1 in the power term
+#' @param adjust.size whether adjust for sizes in group 0 and 1 in the power
+#'     term
 #' @param adjust.dist whether adjust for distance in ps scores in the power term
 #'
 #' @export
@@ -360,15 +368,30 @@ rweGetPowerA <- function(psdist, a = NULL, overall.ess = 0.3,
 #'
 #' @export
 #'
-rwe_match_ps <- function(dta_cur, dta_ext, n_match = 3, ps.fml = NULL, v.covs  = "V1") {
+rwe_match_ps <- function(dta_cur, dta_ext, n_match = 3, ps.fml = NULL,
+                         v.covs  = "V1") {
+
+    n_cur <- nrow(dta_cur)
+    n_ext <- nrow(dta_ext)
+    ratio <- min(n_match, floor(n_ext / n_cur))
+
     dta_cur$grp_tmp <- 1
     dta_ext$grp_tmp <- 0
+    dta_ext         <- dta_ext[, colnames(dta_cur)]
 
     dta    <- rbind(dta_cur, dta_ext)
     dta_ps <- rwePS(data = dta, v.grp = "grp_tmp", v.covs = v.covs, nstrata = 0)
 
-    
-    dta_ps
+    ps        <- dta_ps$data[["_ps_"]]
+    target    <- ps[1:n_cur]
+    candidate <- ps[-(1:n_cur)]
+
+    ## match
+    rst <- cMatch(target, candidate, ratio = ratio)[]
+    rst <- rst[1:(ratio * n_cur)] + 1
+
+    cbind(pid      = rep(1:n_cur, each = ratio),
+          match_id = rst)
 }
 
 ## -----------------------------------------------------------------------------
@@ -378,7 +401,7 @@ rwe_match_ps <- function(dta_cur, dta_ext, n_match = 3, ps.fml = NULL, v.covs  =
 ## -----------------------------------------------------------------------------
 
 ## compute propensity scores
-get.ps <- function(dta, ps.fml, type = c("randomforest", "logistic"),
+get_ps <- function(dta, ps.fml, type = c("logistic", "randomforest"),
                    ntree = 5000,
                    ..., grp = NULL, ps.cov = NULL) {
 

@@ -14,7 +14,8 @@ rweGetPowerA(psdist, a = NULL, overall.ess = 0.3, adjust.size = TRUE,
 
 \item{overall.ess}{ratio of overall added number of patients to N1}
 
-\item{adjust.size}{whether adjust for sizes in group 0 and 1 in the power term}
+\item{adjust.size}{whether adjust for sizes in group 0 and 1 in the power
+term}
 
 \item{adjust.dist}{whether adjust for distance in ps scores in the power term}
 }

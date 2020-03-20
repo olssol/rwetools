@@ -17,9 +17,23 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// cMatch
+NumericVector cMatch(NumericVector target, NumericVector candidate, int ratio);
+RcppExport SEXP _rwetools_cMatch(SEXP targetSEXP, SEXP candidateSEXP, SEXP ratioSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type target(targetSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type candidate(candidateSEXP);
+    Rcpp::traits::input_parameter< int >::type ratio(ratioSEXP);
+    rcpp_result_gen = Rcpp::wrap(cMatch(target, candidate, ratio));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_rwetools_crtTest", (DL_FUNC) &_rwetools_crtTest, 1},
+    {"_rwetools_cMatch", (DL_FUNC) &_rwetools_cMatch, 3},
     {NULL, NULL, 0}
 };
 

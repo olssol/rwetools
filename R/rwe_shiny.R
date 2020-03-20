@@ -1,8 +1,8 @@
 
 #' Run Web-Based \code{rwetools} application
 #'
-#' Call Shiny to run \code{rwetools} as a web-based application. A web browser will
-#' be brought up.
+#' Call Shiny to run \code{rwetools} as a web-based application. A web browser
+#' will be brought up.
 #'
 #' @examples
 #' \dontrun{
@@ -11,7 +11,7 @@
 #'
 #' @export
 #'
-rweShiny <- function() {
+rwe_shiny <- function() {
 
     if (!requireNamespace("shiny", quietly = TRUE)) {
         stop("Shiny needed for this function to work. Please install it.",
@@ -28,12 +28,12 @@ rweShiny <- function() {
              call. = FALSE)
     }
 
-    appDir <- system.file("shiny", package = "etpi")
-    if (appDir == "") {
+    app_dir <- system.file("shiny", package = "etpi")
+    if (app_dir == "") {
         stop("Could not find Shiny directory. Try re-installing `rwetools`.",
              call. = FALSE)
     }
 
 
-    shiny::runApp(appDir, display.mode = "normal");
+    shiny::runApp(app_dir, display.mode = "normal");
 }

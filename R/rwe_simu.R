@@ -4,7 +4,9 @@
 #'
 #' @export
 #'
-rweSimuCov <- function(nPat, muCov, sdCov, corCov, mix.phi = 1, seed = NULL, cov.breaks = NULL) {
+rweSimuCov <- function(nPat, muCov, sdCov, corCov, mix.phi = 1,
+                       seed = NULL,
+                       cov.breaks = NULL) {
 
     f.cur <- function(x, i) {
         if (is.array(x)) {
@@ -38,9 +40,9 @@ rweSimuCov <- function(nPat, muCov, sdCov, corCov, mix.phi = 1, seed = NULL, cov
         cov.x   <- rbind(cov.x, cur.x);
     }
 
-    colnames(cov.x) <- paste("V", 1:ncol(cov.x), sep="");
+    colnames(cov.x) <- paste("V", 1:ncol(cov.x), sep = "");
     cov.x           <- data.frame(cov.x);
-    cov.x           <- get.cov.cat(cov.x, cov.breaks);
+    cov.x           <- get_cov_cat(cov.x, cov.breaks);
 }
 
 #' Simulate X multiplied by Beta
