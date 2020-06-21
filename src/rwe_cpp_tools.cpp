@@ -12,9 +12,9 @@ void my_package_init(DllInfo *dll) {
 }
 
 
-//' Test Rcpp function 
+//' Test Rcpp function
 //'
-//' 
+//'
 //' @param test test parameter
 //'
 //' @export

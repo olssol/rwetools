@@ -148,4 +148,3 @@ metric.mhb <- function(cov0, cov1) {
 
   sum((t(x1 - x0) %*% Sinv) * (x1 - x0))
 }
-

@@ -104,24 +104,31 @@ rweGetYSig <- function(..., nPat=500000, xbeta = NULL, sig2Ratio = 1) {
 #'
 #' @export
 #'
-rweGetBinInt <- function(..., regCoeff, nPat=500000, xbeta = NULL, bin.mu = 0.5) {
+rweGetBinInt <- function(..., regCoeff, nPat=500000, xbeta = NULL,
+                         bin.mu = 0.5) {
     ## fill in 0 for intercept temporarily
     if (is.null(xbeta))
         ey <- rweXBeta(nPat, regCoeff = c(0, regCoeff), ...);
 
-    fx <- function(b0, bmu) {
-        logp <- (b0 + ey) - log(1 + exp(b0+ey));
-        m    <- mean(exp(logp));
-        rst  <- abs(m - bmu);
+    fm <- function(b0) {
+        logp <- (b0 + ey) - log(1 + exp(b0 + ey))
+        m    <- mean(exp(logp))
+        m
     }
 
-    mey <- max(abs(ey));
-    rst <- NULL;
+    fx <- function(b0, bmu) {
+        m <- fm(b0)
+        (m - bmu)^2
+    }
 
+    mey <- max(abs(ey))
+    rst <- NULL
     for (i in 1:length(bin.mu)) {
-        cur.rst <- optimize(fx, c(-100 - mey, 100 + mey),
+        cur_rst <- optimize(fx, c(-100 - mey, 100 + mey),
                             bmu = bin.mu[i])$minimum
-        rst     <- c(rst, cur.rst);
+        cur_m   <- fm(cur_rst)
+        rst     <- rbind(rst,
+                         c(b0 = cur_rst, bmu = cur_m))
     }
 
     rst
@@ -173,7 +180,8 @@ rweSimuSingleArm <- function(nPat, muCov, sdCov, corCov, regCoeff, mix.phi = 1,
                         sdCov      = sdCov,
                         corCov     = corCov,
                         mix.phi    = mix.phi,
-                        cov.breaks = cov.breaks);
+                        cov.breaks = cov.breaks)
+
     ##simulate Y
     if ("continuous" == type) {
         ## epsilon
@@ -361,5 +369,3 @@ rweSimuFromTrial <- function(nPat, trial.data, group = "A", outcome = "Y",
     list(true.effect = trt.effect,
          simu.data   = simu.data[sample(1:nrow(simu.data)),]);
 }
-
-
