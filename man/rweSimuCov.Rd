@@ -4,8 +4,15 @@
 \alias{rweSimuCov}
 \title{Simulate covariates following a mixture of multivariate normal distribution}
 \usage{
-rweSimuCov(nPat, muCov, sdCov, corCov, mix.phi = 1, seed = NULL,
-  cov.breaks = NULL)
+rweSimuCov(
+  nPat,
+  muCov,
+  sdCov,
+  corCov,
+  mix.phi = 1,
+  seed = NULL,
+  cov.breaks = NULL
+)
 }
 \arguments{
 \item{nPat}{number of patients}

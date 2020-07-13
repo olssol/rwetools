@@ -4,9 +4,16 @@
 \alias{rwe_margin_sample}
 \title{Sample patient based on summary statistics}
 \usage{
-rwe_margin_sample(target_stats, dta_ext, method = c("genetic", "sa",
-  "naive", "weighted", "ps"), n_min = 300, max_steps = 10000,
-  epsilon = NULL, seed = NULL, ...)
+rwe_margin_sample(
+  target_stats,
+  dta_ext,
+  method = c("genetic", "sa", "naive", "weighted", "ps"),
+  n_min = 300,
+  max_steps = 10000,
+  epsilon = NULL,
+  seed = NULL,
+  ...
+)
 }
 \arguments{
 \item{target_stats}{target summary statistics}

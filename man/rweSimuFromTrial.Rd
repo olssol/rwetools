@@ -4,10 +4,20 @@
 \alias{rweSimuFromTrial}
 \title{Simulate data from an existing dataset}
 \usage{
-rweSimuFromTrial(nPat, trial.data, group = "A", outcome = "Y",
-  with.replacement = TRUE, seed = NULL, permute = TRUE,
-  f.subset = NULL, permute.trteffect = 0, permute.interaction = 0,
-  simu.group = group, simu.outcome = outcome)
+rweSimuFromTrial(
+  nPat,
+  trial.data,
+  group = "A",
+  outcome = "Y",
+  with.replacement = TRUE,
+  seed = NULL,
+  permute = TRUE,
+  f.subset = NULL,
+  permute.trteffect = 0,
+  permute.interaction = 0,
+  simu.group = group,
+  simu.outcome = outcome
+)
 }
 \arguments{
 \item{nPat}{number of patients}

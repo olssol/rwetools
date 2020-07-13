@@ -31,14 +31,13 @@ double crtTest(double test) {
 //' @param candidates vector of data from the candidate group
 //' @param ratio  1:ratio match
 //'
-//' @export
 // [[Rcpp::export]]
 NumericVector cMatch(NumericVector target, NumericVector candidate, int ratio) {
 
   NumericVector dist(candidate.size());
   NumericVector inx(candidate.size());
 
-  int      i, j, k, start;
+  int i, j, k, start;
 
   // initialize index of candidates
   for (i = 0; i < inx.size(); i++) {

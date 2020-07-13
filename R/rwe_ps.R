@@ -429,4 +429,3 @@ get_ps <- function(dta, ps.fml, type = c("logistic", "randomforest"),
            });
     est.ps
 }
-

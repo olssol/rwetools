@@ -4,7 +4,7 @@
 \alias{rwe_margin_ll}
 \title{Calculate log-likelihood based on summary statistics}
 \usage{
-rwe_margin_ll(lst_stats, y)
+rwe_margin_ll(target_stats, y)
 }
 \arguments{
 \item{y}{matrix of data, each column represents a covariate and each row

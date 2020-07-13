@@ -4,8 +4,13 @@
 \alias{rweGetPowerA}
 \title{Get the actual power term in the power prior}
 \usage{
-rweGetPowerA(psdist, a = NULL, overall.ess = 0.3, adjust.size = TRUE,
-  adjust.dist = TRUE)
+rweGetPowerA(
+  psdist,
+  a = NULL,
+  overall.ess = 0.3,
+  adjust.size = TRUE,
+  adjust.dist = TRUE
+)
 }
 \arguments{
 \item{psdist}{A RWE_PSDIST type object}

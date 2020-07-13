@@ -4,8 +4,15 @@
 \alias{rweSTAN}
 \title{Call STAN models}
 \usage{
-rweSTAN(lst.data, stan.mdl = "powerp", chains = 4, iter = 2000,
-  warmup = 1000, control = list(adapt_delta = 0.95), ...)
+rweSTAN(
+  lst.data,
+  stan.mdl = "powerp",
+  chains = 4,
+  iter = 2000,
+  warmup = 1000,
+  control = list(adapt_delta = 0.95),
+  ...
+)
 }
 \arguments{
 \item{chains}{STAN parameter. Number of Markov chainsm}

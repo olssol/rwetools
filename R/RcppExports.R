@@ -19,8 +19,6 @@ crtTest <- function(test) {
 #' @param candidates vector of data from the candidate group
 #' @param ratio  1:ratio match
 #'
-#' @export
 cMatch <- function(target, candidate, ratio) {
     .Call(`_rwetools_cMatch`, target, candidate, ratio)
 }
-

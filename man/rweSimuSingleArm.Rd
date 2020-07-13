@@ -4,9 +4,22 @@
 \alias{rweSimuSingleArm}
 \title{Simulate outcomes for a single arm study}
 \usage{
-rweSimuSingleArm(nPat, muCov, sdCov, corCov, regCoeff, mix.phi = 1,
-  cov.breaks = NULL, fmla = NULL, type = c("continuous", "binary"),
-  ysig = NULL, sig2Ratio = 1, b0 = NULL, bin.mu = 0.5, ...)
+rweSimuSingleArm(
+  nPat,
+  muCov,
+  sdCov,
+  corCov,
+  regCoeff,
+  mix.phi = 1,
+  cov.breaks = NULL,
+  fmla = NULL,
+  type = c("continuous", "binary"),
+  ysig = NULL,
+  sig2Ratio = 1,
+  b0 = NULL,
+  bin.mu = 0.5,
+  ...
+)
 }
 \arguments{
 \item{nPat}{number of patients}

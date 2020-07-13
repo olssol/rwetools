@@ -5,8 +5,7 @@
 \title{Get number of subjects and the distances of PS distributions for each PS
 strata for multiple data sources}
 \usage{
-rweGpsDist(data.gps, n.bins = 10, min.n0 = 10, type = c("ovl", "kl"),
-  ...)
+rweGpsDist(data.gps, n.bins = 10, min.n0 = 10, type = c("ovl", "kl"), ...)
 }
 \arguments{
 \item{min.n0}{threshold for N0, below which the external data in the

@@ -9,7 +9,7 @@
 #' @export
 #'
 rweCut <- function(x, y = x, breaks = 5, keep.inx = NULL) {
-    cuts    <- quantile(x, seq(0, 1,length = breaks+1));
+    cuts    <- quantile(x, seq(0, 1, length = breaks+1));
     cuts[1] <- cuts[1] - 0.001;
     rst     <- rep(NA, length(y));
     for (i in 2:length(cuts)) {
@@ -299,6 +299,24 @@ rweSimuCombine <- function(lst.rst, fun = mean, ignore.error = TRUE, ...) {
     lst.combine
 }
 
+#' Match by nearest neighbor
+#'
+#' Match subjects in group candidate with subject in the target group
+#'
+#' @param target  vector of data from the target group
+#' @param candidates vector of data from the candidate group
+#' @param ratio  1:ratio match
+#'
+#' @export
+get_match <- function(target, candidate, ratio) {
+    rst <- cMatch(target, candidate, ratio)
+    rst <- rst[seq_len(ratio * length(target))] + 1
+
+    cbind(
+        id = rep(seq_len(length(target)), each = ratio),
+        mid = rst
+    )
+}
 
 
 ## --------------------------------------------------------------------------------

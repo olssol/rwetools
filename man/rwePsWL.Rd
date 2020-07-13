@@ -4,8 +4,15 @@
 \alias{rwePsWl}
 \title{PS-Integrated Weighted Likelihood Estimation}
 \usage{
-rwePsWl(data, lambdas, v.outcome = "Y", m.var = c("jk", "bs"),
-  bs.n = 1000, seed = NULL, ...)
+rwePsWl(
+  data,
+  lambdas,
+  v.outcome = "Y",
+  m.var = c("jk", "bs"),
+  bs.n = 1000,
+  seed = NULL,
+  ...
+)
 }
 \arguments{
 \item{data}{class DWITHPS data frame}

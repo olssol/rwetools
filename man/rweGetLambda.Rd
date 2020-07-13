@@ -4,8 +4,15 @@
 \alias{rweGetLambda}
 \title{Get weights}
 \usage{
-rweGetLambda(A, rs = NULL, ns1.trt = NULL, ns1.ctl = NULL, ns0,
-  m.lambda = c("rs", "even", "inverse"), ...)
+rweGetLambda(
+  A,
+  rs = NULL,
+  ns1.trt = NULL,
+  ns1.ctl = NULL,
+  ns0,
+  m.lambda = c("rs", "even", "inverse"),
+  ...
+)
 }
 \arguments{
 \item{A}{target number of subjects to be borrowed}

@@ -4,8 +4,7 @@
 \alias{rweGPS}
 \title{Get generalized propensity scores}
 \usage{
-rweGPS(data, ps.fml = NULL, v.grp = "group", v.covs = "V1",
-  nstrata = 5, ...)
+rweGPS(data, ps.fml = NULL, v.grp = "group", v.covs = "V1", nstrata = 5, ...)
 }
 \arguments{
 \item{...}{parameters to get propensity scores}

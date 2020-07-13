@@ -4,10 +4,25 @@
 \alias{rweSimuTwoArm}
 \title{Simulate continuous outcomes for a two arm study}
 \usage{
-rweSimuTwoArm(nPat, muCov, sdCov, corCov, trt.effect = 0, regCoeff.y,
-  regCoeff.z = 0, mix.phi = 1, cov.breaks = NULL, fmla.y = NULL,
-  fmla.z = NULL, ysig = NULL, b0 = NULL, z1.p = 0.5,
-  sig2Ratio = 2, ..., do.simu = TRUE)
+rweSimuTwoArm(
+  nPat,
+  muCov,
+  sdCov,
+  corCov,
+  trt.effect = 0,
+  regCoeff.y,
+  regCoeff.z = 0,
+  mix.phi = 1,
+  cov.breaks = NULL,
+  fmla.y = NULL,
+  fmla.z = NULL,
+  ysig = NULL,
+  b0 = NULL,
+  z1.p = 0.5,
+  sig2Ratio = 2,
+  ...,
+  do.simu = TRUE
+)
 }
 \arguments{
 \item{nPat}{number of patients}

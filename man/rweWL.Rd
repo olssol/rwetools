@@ -4,8 +4,13 @@
 \alias{rweWL}
 \title{Weighted Likelihood Estimation for one external RWD}
 \usage{
-rweWL(cur.data, ext.data, lambda, type = c("continuous", "binary"),
-  equal.sd = TRUE)
+rweWL(
+  cur.data,
+  ext.data,
+  lambda,
+  type = c("continuous", "binary"),
+  equal.sd = TRUE
+)
 }
 \arguments{
 \item{cur.data}{data from current study}

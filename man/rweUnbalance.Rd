@@ -2,10 +2,17 @@
 % Please edit documentation in R/rwe_balance.R
 \name{rweUnbalance}
 \alias{rweUnbalance}
-\title{Get unbalance in baseline covariates}
+\title{Get unbalance in baseline Covariates}
 \usage{
-rweUnbalance(nPat, ..., pts = NULL, covs = NULL, diff = TRUE,
-  var.group = "Z", cov.pattern = "^V[0-9]+$")
+rweUnbalance(
+  nPat,
+  ...,
+  pts = NULL,
+  covs = NULL,
+  diff = TRUE,
+  var.group = "Z",
+  cov.pattern = "^V[0-9]+$"
+)
 }
 \arguments{
 \item{nPat}{number of patients}
@@ -21,5 +28,5 @@ If diff is TRUE, return a dataset with columns V and Diff. Otherwise,
     represents the name of covariates.
 }
 \description{
-Get unbalance in baseline covariates
+Get unbalance in baseline Covariates
 }

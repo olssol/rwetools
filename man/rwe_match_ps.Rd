@@ -4,8 +4,7 @@
 \alias{rwe_match_ps}
 \title{Match on PS}
 \usage{
-rwe_match_ps(dta_cur, dta_ext, n_match = 3, ps.fml = NULL,
-  v.covs = "V1")
+rwe_match_ps(dta_cur, dta_ext, n_match = 3, ps.fml = NULL, v.covs = "V1")
 }
 \arguments{
 \item{dta_cur}{current study data}

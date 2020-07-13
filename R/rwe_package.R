@@ -63,3 +63,20 @@ NULL
 #'
 #'
 NULL
+
+#' Example dataset
+#'
+#' This is a simulated dataset
+#'
+#' @name ex_data
+#'
+#' @format A dataframe with the following variables:
+#' \describe{
+#'   \item{group}{0,1}
+#'   \item{V1-V10}{Covariates}
+#'   \item{Y}{Continuous outcome}
+#' }
+#'
+#'
+#'
+NULL

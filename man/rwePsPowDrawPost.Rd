@@ -4,8 +4,15 @@
 \alias{rwePsPowDrawPost}
 \title{Get Posterior for all stratum}
 \usage{
-rwePsPowDrawPost(data, type = c("continuous", "binary"), A = 0,
-  RS = NULL, Fix.RS = FALSE, v.outcome = "Y", ...)
+rwePsPowDrawPost(
+  data,
+  type = c("continuous", "binary"),
+  A = 0,
+  RS = NULL,
+  Fix.RS = FALSE,
+  v.outcome = "Y",
+  ...
+)
 }
 \arguments{
 \item{data}{class DWITHPS data frame}

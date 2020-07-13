@@ -4,8 +4,15 @@
 \alias{rweSimuError}
 \title{Simulate random errors}
 \usage{
-rweSimuError(nPat, error.type = c("normal", "skewed"), ysig = 1,
-  skew.n = NULL, skew.p = NULL, skew.noise = 1e-04, ...)
+rweSimuError(
+  nPat,
+  error.type = c("normal", "skewed"),
+  ysig = 1,
+  skew.n = NULL,
+  skew.p = NULL,
+  skew.noise = 1e-04,
+  ...
+)
 }
 \arguments{
 \item{nPat}{number of patients}

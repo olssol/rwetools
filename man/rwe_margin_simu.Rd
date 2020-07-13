@@ -4,7 +4,7 @@
 \alias{rwe_margin_simu}
 \title{Simulate covariates based on summary statistics}
 \usage{
-rwe_margin_simu(lst_stats, n = 500)
+rwe_margin_simu(target_stats, n = 500)
 }
 \value{
 data frame with n patients, each column represents a covariate and

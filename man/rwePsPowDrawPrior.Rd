@@ -4,8 +4,15 @@
 \alias{rwePsPowDrawPrior}
 \title{Get Prior Only for all stratum}
 \usage{
-rwePsPowDrawPrior(data, type = c("continuous", "binary"), A = 0,
-  RS = NULL, v.outcome = "Y", iter = 2000, ...)
+rwePsPowDrawPrior(
+  data,
+  type = c("continuous", "binary"),
+  A = 0,
+  RS = NULL,
+  v.outcome = "Y",
+  iter = 2000,
+  ...
+)
 }
 \arguments{
 \item{data}{class DWITHPS data frame}

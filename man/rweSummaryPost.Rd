@@ -4,8 +4,7 @@
 \alias{rweSummaryPost}
 \title{Summary Posterior theta}
 \usage{
-rweSummaryPost(post.theta, true.theta, quants = c(0.025, 0.975),
-  weights = 1)
+rweSummaryPost(post.theta, true.theta, quants = c(0.025, 0.975), weights = 1)
 }
 \arguments{
 \item{post.theta}{posterior samples from STAN}
