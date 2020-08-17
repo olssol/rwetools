@@ -81,6 +81,121 @@ rwe_margin_ll <- function(target_stats, y) {
     cbind(ll = ll, weights = weights)
 }
 
+#' Calculate PS score based on simulated target data
+#'
+#'
+#'
+#' @export
+#'
+rwe_margin_ps <- function(target_stats, dta_ext, n_cur = NULL,
+                          reps = 10, ps_thresh = 0.01) {
+
+    n_ext <- nrow(dta_ext)
+    if (is.null(n_cur))
+        n_cur <- n_ext
+
+    rst_ps <- NULL
+    for (i in 1:reps) {
+        dta_cur         <- rwe_margin_simu(n = n_cur, target_stats)
+        v_covs          <- colnames(dta_cur)
+        dta_ext         <- dta_ext[, v_covs]
+        dta_cur$grp_tmp <- 1
+        dta_ext$grp_tmp <- 0
+        dta             <- rbind(dta_ext, dta_cur)
+
+        ## get ps
+        dta_ps <- rwePS(data = dta, v.grp = "grp_tmp", v.covs = v_covs)
+
+        ## return dta_ext PS
+        cur_ps <- dta_ps$data[["_ps_"]][1:n_ext]
+
+        cur_ps[which(cur_ps < ps_thresh)] <- ps_thresh
+        rst_ps <- cbind(rst_ps, cur_ps)
+    }
+
+    ## return
+    apply(rst_ps, 1, mean)
+}
+
+#' Calculate entropy score
+#'
+#' Get entropy balancing score
+#'
+#' @export
+#'
+rwe_margin_entropy <- function(target_stats, dta_ext,
+                        tol = 1e-8, max_it = 10000,
+                        print_level = 0) {
+
+    line.searcher <- function (Base.weight, Co.x, Tr.total, coefs, Newton, ss) {
+        weights.temp <- c(exp(Co.x %*% (coefs - (ss * Newton))))
+        weights.temp <- weights.temp * Base.weight
+        Co.x.agg     <- c(weights.temp %*% Co.x)
+        maxdiff      <- max(abs(Co.x.agg - Tr.total))
+        return(maxdiff)
+    }
+
+    x_m         <- rwe_extract_stats_covx(target_stats, dta_ext)
+    covx        <- cbind(1, x_m$covx)
+    n_ext       <- nrow(covx)
+    tr_total    <- c(n_ext, x_m$constraints * n_ext)
+    base_weight <- rep(1, n_ext)
+    coefs       <- rep(0, ncol(covx))
+
+    ## optimize
+    converged   <- FALSE
+    for (iter in 1:max_it) {
+        weights_temp <- c(exp(covx %*% coefs))
+        weights_ebal <- weights_temp * base_weight
+        covx_agg     <- c(weights_ebal %*% covx)
+        gradient     <- covx_agg - tr_total
+
+        if (max(abs(gradient)) < tol) {
+            converged <- TRUE
+            break
+        }
+
+        if (print_level >= 2) {
+            cat("Iteration", iter, "maximum deviation is =",
+                format(max(abs(gradient)), digits = 4), "\n")
+        }
+
+        hessian  <- t(covx) %*% (weights_ebal * covx)
+        Coefs    <- coefs
+        newton   <- solve(hessian, gradient)
+        coefs    <- coefs - newton
+
+        loss.new <- line.searcher(Base.weight = base_weight,
+                                  Co.x = covx,
+                                  Tr.total = tr_total,
+                                  coefs = coefs,
+                                  Newton = newton, ss = 1)
+
+        loss.old <- line.searcher(Base.weight = base_weight,
+                                  Co.x = covx,
+                                  Tr.total = tr_total,
+                                  coefs = Coefs,
+                                  Newton = newton, ss = 0)
+
+        if (is.nan(loss.new) |
+            loss.old <= loss.new) {
+            ss.out <- optimize(line.searcher, lower = 1e-05,
+                               upper = 1, maximum = FALSE,
+                               Base.weight = base_weight,
+                               Co.x = covx, Tr.total = tr_total, coefs = Coefs,
+                               Newton = newton)
+
+            coefs <- Coefs - ss.out$minimum * solve(hessian, gradient)
+        }
+    }
+
+    ## return
+    list(maxdiff      = max(abs(gradient)),
+         coefs        = coefs,
+         weights      = weights_ebal / n_ext,
+         converged    = converged)
+}
+
 
 #' Extract summary statistics
 #'
@@ -91,7 +206,7 @@ rwe_margin_ll <- function(target_stats, y) {
 #'
 #' @export
 #'
-rwe_extract_stats <- function(target_stats, y) {
+rwe_extract_stats <- function(target_stats, y, ...) {
     rst <- list()
     for (i in seq_len(length(target_stats))) {
         cur_v   <- names(target_stats)[i]
@@ -100,10 +215,10 @@ rwe_extract_stats <- function(target_stats, y) {
 
         cur_rst <- switch(
             cur_s$type,
-            discrete   = tkExtractStats(cur_y, xlev = cur_s$values),
-            continuous = tkExtractStats(cur_y, type = "continuous"),
-            quants     = tkExtractStats(cur_y, type = "quants",
-                                        quants = cur_s$quants[, 1]))
+            discrete   = tk_extract_stats(cur_y, xlev = cur_s$values, ...),
+            continuous = tk_extract_stats(cur_y, type = "continuous", ...),
+            quants     = tk_extract_stats(cur_y, type = "quants", ...,
+                                          quants = cur_s$quants[, 1]))
         rst[[cur_v]] <- cur_rst
     }
     rst
@@ -118,8 +233,8 @@ rwe_extract_stats <- function(target_stats, y) {
 rwe_margin_stat_diff <- function(target_stats, y, type = c("max", "sum"),
                                  epsilon = NULL, ...) {
 
-    type        <- match.arg(type)
-    target_stats_y <- rwe_extract_stats(target_stats, y)
+    type           <- match.arg(type)
+    target_stats_y <- rwe_extract_stats(target_stats, y, ...)
 
     ## all differences
     rst <- NULL
@@ -146,7 +261,94 @@ rwe_margin_stat_diff <- function(target_stats, y, type = c("max", "sum"),
          acceptable = yn)
 }
 
+#' Get estimating equation
+#'
+#' Get moment equations based on existing statistics
+#'
+#' @return list of summary statistics
+#'
+#' @export
+#'
+rwe_extract_stats_covx <- function(target_stats, y,
+                                   cont_stat = c("mean", "ex2")) {
 
+    ## continuous covariates summary statistics
+    cont_stat <- match.arg(cont_stat, several.ok = TRUE)
+
+    f_disc <- function(cur_y, stats) {
+
+        xlev  <- stats$values
+        probs <- stats$probs
+
+        c_rst <- NULL
+        c_m   <- NULL
+        for (i in seq_len(length(xlev) - 1)) {
+            x     <- xlev[i]
+            c_rst <- cbind(c_rst,
+                           as.numeric(x == cur_y))
+            c_m   <- c(c_m, probs[i])
+        }
+
+        list(c_rst, c_m)
+    }
+
+    f_cont <- function(cur_y, stats, cont_stat) {
+        c_rst <- NULL
+        c_m   <- NULL
+        for (i in cont_stat) {
+            cur_v <- stats[[i]]
+            if (is.null(cur_v))
+                next;
+
+            if ("mean" == i) {
+                y <- cur_y
+            } else if ("ex2" == i) {
+                y <- y^2
+            }
+
+            c_rst <- cbind(c_rst, y)
+            c_m   <- c(c_m, cur_v)
+        }
+
+        list(c_rst, c_m)
+    }
+
+    f_quan <- function(cur_y, stats) {
+        quants <- stats$quants
+
+        c_m   <- quants$quants
+        c_rst <- NULL
+        for (i in seq_len(nrow(quants))) {
+            qt    <- quants$x_quants[i]
+            c_rst <- cbind(c_rst,
+                           as.numeric(cur_y <= qt))
+        }
+
+        list(c_rst, c_m)
+    }
+
+    rst_x <- NULL
+    rst_m <- NULL
+    for (i in seq_len(length(target_stats))) {
+        cur_v   <- names(target_stats)[i]
+        cur_y   <- y[[cur_v]]
+        cur_s   <- target_stats[[i]]
+
+        cur_rst <- switch(
+            cur_s$type,
+            discrete   = f_disc(cur_y, cur_s),
+            continuous = f_cont(cur_y, cur_s, cont_stat),
+            quants     = f_quan(cur_y, cur_s)
+        )
+
+        rst_x <- cbind(rst_x, cur_rst[[1]])
+        rst_m <- c(rst_m, cur_rst[[2]])
+    }
+
+    ## return
+    list(covx        = rst_x,
+         constraints = rst_m)
+}
 
 ## -----------------------------------------------------------------------------
 ## -----------------------------------------------------------------------------
@@ -254,6 +456,7 @@ private_stat_diff <- function(stat0, stat1) {
                       stopifnot(identical(stat0$values,
                                           stat1$values))
                       diff <- stat0$probs - stat1$probs
+                      diff[-1]
                   },
                   continuous = {
                       c(stat0$mean - stat1$mean,
@@ -315,7 +518,7 @@ private_margin_sample_naive <- function(target_stats, dta_ext, n_min = 300,
     if (weighted) {
         weights <- rwe_margin_ll(target_stats, dta_ext)[, "weights"]
     } else {
-        weights <- rep(1/n_max, n_max)
+        weights <- rep(1 / n_max, n_max)
     }
 
     ## initiate
@@ -514,6 +717,3 @@ private_margin_sample_rf <- function(target_stats, dta_ext, n_min = 300,
                k                 <- k + 1
            }
 }
-
-
-

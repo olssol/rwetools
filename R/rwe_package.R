@@ -5,11 +5,12 @@
 #' @aliases   rwetools
 #' @useDynLib rwetools, .registration = TRUE
 #'
-#' @import stats
 #' @import Rcpp
 #' @import methods
 #' @import ggplot2
 #'
+#' @importFrom stats approxfun as.formula binomial cov density ecdf glm
+#'     integrate optim predict quantile sd var
 #' @importFrom rstan         sampling extract stanc rstan_options traceplot stan_rhat
 #' @importFrom randomForest  randomForest
 #'
@@ -22,6 +23,7 @@
 #' @importFrom dplyr %>% group_by_ group_by summarize mutate count_ mutate_if
 #'     rename_ filter
 #' @importFrom GA ga
+#'
 #'
 #' @description
 #'

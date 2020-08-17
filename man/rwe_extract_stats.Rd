@@ -4,7 +4,7 @@
 \alias{rwe_extract_stats}
 \title{Extract summary statistics}
 \usage{
-rwe_extract_stats(target_stats, y)
+rwe_extract_stats(target_stats, y, ...)
 }
 \value{
 list of summary statistics

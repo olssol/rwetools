@@ -6,9 +6,9 @@
 \format{
 A dataframe with the following variables:
 \describe{
-  \item{group}{0,1}
+  \item{group}{0,1,2}
   \item{V1-V10}{Covariates}
-  \item{Y}{Continuous outcome}
+  \item{Y}{Binary outcome}
 }
 }
 \description{

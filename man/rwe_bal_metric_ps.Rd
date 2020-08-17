@@ -8,7 +8,7 @@ rwe_bal_metric_ps(
   covs,
   grp,
   ps,
-  adjust = c("matching", "strat"),
+  adjust = c("matching", "stratification"),
   n_strata = 5,
   m_ratio = 3,
   ...

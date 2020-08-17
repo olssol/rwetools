@@ -22,3 +22,4 @@ crtTest <- function(test) {
 cMatch <- function(target, candidate, ratio) {
     .Call(`_rwetools_cMatch`, target, candidate, ratio)
 }
+

@@ -403,3 +403,86 @@ get_cov_cat <- function(covX, breaks = NULL) {
 
     rst
 }
+
+
+## entropy score
+temp_entropy <- function(target_stats, dta_ext, ...) {
+
+    print(list(...))
+
+    n_ext     <- nrow(dta_ext)
+    mat_cov   <- as.matrix(dta_ext[, names(target_stats)])
+    mat_cov   <- matrix(as.numeric(mat_cov), nrow = n_ext)
+    n_x       <- ncol(mat_cov)
+    log_n     <- log(n_ext)
+
+    init_diff <- rwe_margin_stat_diff(target_stats, dta_ext)$diff
+    n_r       <- length(init_diff)
+
+    f_wi <- function(beta) {
+        b0      <- beta[1]
+        beta_wi <- beta[2 : (n_x + 1)]
+
+        bx      <- apply(mat_cov,
+                        1,
+                        function(x) sum(x * beta_wi))
+        bx      <- b0 + bx
+        ebx     <- exp(bx)
+        ebx     <- ebx / (1 + ebx)
+
+        wi      <- ebx / sum(ebx)
+        wi
+    }
+
+    f_obj_1 <- function(beta) {
+        wi  <- f_wi(beta)
+        rst <- sum(wi * log(wi)) + log_n
+        print(rst)
+
+        rst
+    }
+
+    f_obj_2 <- function(beta) {
+        wi   <- f_wi(beta)
+        diff <- rwe_margin_stat_diff(target_stats, dta_ext,
+                                     weights = wi)$diff
+
+        rst  <- sum(diff^2)
+
+        print(c(beta, rst))
+
+        browser()
+        rst
+    }
+
+    f_obj <- function(beta) {
+        ## lambdas
+        lambda_r <- beta[n_x + (1 : n_r)]
+
+        ## diff
+        wi   <- f_wi(beta)
+        diff <- rwe_margin_stat_diff(target_stats, dta_ext,
+                                     weights = wi)$diff
+
+        ## loss
+        rst_1 <- sum(wi * log(wi)) + log_n
+        rst_2 <- sum(lambda_r * diff)
+        rst   <- rst_1 + rst_2
+
+        print(c(rst_1, rst_2, rst))
+        rst
+    }
+
+    init_beta   <- rep(0, 1 + n_x)
+    init_lambda <- c(init_beta, rep(0, n_r))
+    rst         <- optim(init_beta, f_obj_2, ...)
+
+    ## results
+    wi   <- f_wi(rst$par)
+    diff <- rwe_margin_stat_diff(target_stats, dta_ext, weights = wi)$diff
+
+    list(wi        = wi,
+         diff      = diff,
+         init_diff = init_diff,
+         rst_opt   = rst)
+}

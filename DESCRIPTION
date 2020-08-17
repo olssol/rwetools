@@ -1,5 +1,5 @@
 Package: rwetools
-Title: R functions for real-world data analysis 
+Title: R functions for real-world data analysis
 Version: 6.0
 Author: Chenguang Wang [aut, cre]
         Trustees of Columbia University [cph] (tools/make_cpp.R, R/stanmodels.R)
@@ -22,7 +22,7 @@ RcppModules:
     stan_fit4powerpsbinary_mod,
     stan_fit4prior_mod
 Imports:
-    parallel (>= 3.2),
+    parallel (>= 3.2)
 Encoding: UTF-8
 LazyData: true
 ByteCompile: true
