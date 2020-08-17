@@ -316,10 +316,10 @@ rwe_extract_stats_covx <- function(target_stats, y,
     f_quan <- function(cur_y, stats) {
         quants <- stats$quants
 
-        c_m   <- quants$quants
+        c_m   <- quants[, "quants"]
         c_rst <- NULL
         for (i in seq_len(nrow(quants))) {
-            qt    <- quants$x_quants[i]
+            qt    <- quants[i, "x_quants"]
             c_rst <- cbind(c_rst,
                            as.numeric(cur_y <= qt))
         }
