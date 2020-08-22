@@ -80,9 +80,11 @@ tk_extract_stats <- function(x, quants = c(0.5), xlev = NULL,
         c(x_mean, x2_mean, x_sd)
     }
 
-    f_quantile <- function(x, quants, weights) {
-        x_quants <- Hmisc::wtd.quantile(x, weights = weights,
-                                       probs = quants, normwt = TRUE)
+    f_quantile <- function(x, quants) {
+        ## x_quants <- Hmisc::wtd.quantile(x, weights = weights,
+        ##                               probs = quants, normwt = TRUE)
+
+        x_quants <- quantile(x, probs = quants)
         cbind(quants, x_quants)
     }
 
