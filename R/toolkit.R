@@ -112,7 +112,7 @@ tk_extract_stats <- function(x, quants = c(0.5), xlev = NULL,
                     mean   = m_sd[1],
                     ex2    = m_sd[2],
                     sd     = m_sd[3],
-                    quants = f_quantile(x, quants, weights))
+                    quants = f_quantile(x, quants))
     }
 
     if (is.null(x))

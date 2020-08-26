@@ -124,10 +124,11 @@ rwe_margin_ps <- function(target_stats, dta_ext, n_cur = NULL,
 #' @export
 #'
 rwe_margin_entropy <- function(target_stats, dta_ext,
-                        tol = 1e-8, max_it = 10000,
-                        print_level = 0) {
+                               tol = 1e-8, max_it = 10000,
+                               print_level = 0) {
 
-    line.searcher <- function (Base.weight, Co.x, Tr.total, coefs, Newton, ss) {
+    line.searcher <- function (Base.weight, Co.x, Tr.total,
+                               coefs, Newton, ss) {
         weights.temp <- c(exp(Co.x %*% (coefs - (ss * Newton))))
         weights.temp <- weights.temp * Base.weight
         Co.x.agg     <- c(weights.temp %*% Co.x)
@@ -149,6 +150,10 @@ rwe_margin_entropy <- function(target_stats, dta_ext,
         weights_ebal <- weights_temp * base_weight
         covx_agg     <- c(weights_ebal %*% covx)
         gradient     <- covx_agg - tr_total
+
+        if (1 == iter)
+            init_stats <- covx_agg
+
 
         if (max(abs(gradient)) < tol) {
             converged <- TRUE
@@ -190,9 +195,16 @@ rwe_margin_entropy <- function(target_stats, dta_ext,
     }
 
     ## return
+    weights <- weights_ebal / n_ext
+    stats   <- rbind(as.numeric(init_stats)[-1] / n_ext,
+                     x_m$constraints,
+                     as.numeric(weights %*% covx)[-1])
+    rownames(stats) <- c("raw", "target", "adjusted")
+
     list(maxdiff      = max(abs(gradient)),
          coefs        = coefs,
-         weights      = weights_ebal / n_ext,
+         weights      = weights,
+         stats        = stats,
          converged    = converged)
 }
 
@@ -331,8 +343,11 @@ rwe_extract_stats_covx <- function(target_stats, y,
     rst_m <- NULL
     for (i in seq_len(length(target_stats))) {
         cur_v   <- names(target_stats)[i]
-        cur_y   <- y[[cur_v]]
         cur_s   <- target_stats[[i]]
+        cur_y   <- y[[cur_v]]
+
+        if (!is.null(cur_s$scale))
+            cur_y <- cur_y * cur_s$scale
 
         cur_rst <- switch(
             cur_s$type,
