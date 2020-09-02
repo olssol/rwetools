@@ -54,16 +54,24 @@ rwePsPowDrawPost <- function(data, type = c("continuous", "binary"),
     Y1     <- NULL;
     INX1   <- NULL;
     for (i in 1:S) {
-        cur.d1 <- data[data[["_strata_"]] == i & data[["_grp_"]] == 1, v.outcome];
-        cur.d0 <- data[data[["_strata_"]] == i & data[["_grp_"]] == 0, v.outcome];
+        cur.d1 <- data[data[["_strata_"]] == i &
+                       data[["_grp_"]] == 1, v.outcome];
+        cur.d0 <- data[data[["_strata_"]] == i &
+                       data[["_grp_"]] == 0, v.outcome];
 
         if (0 == length(cur.d1) | 0 == length(cur.d0)) {
-            stop(paste("Stratum ", i, " contains no subjects from group 1 or 0", sep = ""));
+            stop(paste("Stratum ", i,
+                       " contains no subjects from group 1 or 0",
+                       sep = ""));
         }
 
         cur.n1 <- length(cur.d1);
-        cur.d  <- c(N0 = length(cur.d0), YBAR0 = mean(cur.d0), SD0   = sd(cur.d0),
-                    N1 = cur.n1,         YBAR1 = mean(cur.d1), YSUM1 = sum(cur.d1));
+        cur.d  <- c(N0    = length(cur.d0),
+                    YBAR0 = mean(cur.d0),
+                    SD0   = sd(cur.d0),
+                    N1    = cur.n1,
+                    YBAR1 = mean(cur.d1),
+                    YSUM1 = sum(cur.d1))
 
         stan.d <- rbind(stan.d, cur.d);
         Y1     <- c(Y1, cur.d1);
@@ -89,25 +97,40 @@ rwePsPowDrawPost <- function(data, type = c("continuous", "binary"),
                       list(TN1  = length(Y1),
                            Y1   = Y1,
                            INX1 = INX1));
-        rst.post  <- rweSTAN(lst.data = lst.data, stan.mdl = stan.mdl, ...);
-        rst.theta <- rstan::extract(rst.post, pars = "theta")$theta;
+        rst.post  <- rweSTAN(lst.data = lst.data,
+                             stan.mdl = stan.mdl,
+                             ...)
+
+        rst.theta <- rstan::extract(rst.post, pars = "theta")$theta
+        if (1 == S) {
+            rst.theta.all <- NULL
+        } else {
+            rst.theta.all <- rstan::extract(rst.post, pars = "thetas")$thetas
+        }
+
     } else {
         lst.data <- c(lst.data,
-                      list(YBAR1 = as.numeric(stan.d[,"YBAR1"]),
-                           YSUM1 = as.numeric(stan.d[,"YSUM1"])));
+                      list(YBAR1 = as.numeric(stan.d[, "YBAR1"]),
+                           YSUM1 = as.numeric(stan.d[, "YSUM1"])));
 
         if (1 < S) {
-            rst.post  <- rweSTAN(lst.data = lst.data, stan.mdl = "powerpsbinary", ...);
-            rst.theta <- rstan::extract(rst.post, pars = "theta")$theta;
+            rst.post  <- rweSTAN(lst.data = lst.data,
+                                 stan.mdl = "powerpsbinary", ...);
+            rst.theta     <- rstan::extract(rst.post, pars = "theta")$theta
+            rst.theta.all <- rstan::extract(rst.post, pars = "thetas")$thetas
         } else {
-            rst.post  <- NULL;
-            rst.theta <- with(lst.data, rbeta(2000, YSUM1+A*YBAR0+1, N1-YSUM1+A*(1-YBAR0)+1));
+            rst.theta <- with(lst.data,
+                              rbeta(2000,
+                                    YSUM1 + A * YBAR0 + 1,
+                                    N1 - YSUM1 + A * (1 -YBAR0) + 1))
+            rst.theta.all <- NULL
         }
     }
 
     ## return
-    list(post.theta = rst.theta,
-         stan.rst   = rst.post);
+    list(post.theta      = rst.theta,
+         post.theta.stra = rst.theta.all,
+         stan.rst        = rst.post);
 }
 
 #' Summary Posterior theta
@@ -161,17 +184,20 @@ rwePsPowDrawPrior <- function(data, type = c("continuous", "binary"), A = 0, RS 
 
     rst.theta <- NULL;
     for (i in 1:S) {
-        cur.d0 <- data[data[["_strata_"]] == i & data[["_grp_"]] == 0, v.outcome];
+        cur.d0 <- data[data[["_strata_"]] == i &
+                       data[["_grp_"]] == 0, v.outcome]
 
         if (0 == length(cur.d0)) {
-            warning(paste("Stratum ", i, " contains no subjects from group 0", sep = ""));
+            warning(paste("Stratum ", i,
+                          " contains no subjects from group 0",
+                          sep = ""));
             next;
         }
 
         N0    <- length(cur.d0);
         YBAR0 <- mean(cur.d0);
         SD0   <- sd(cur.d0);
-        ALPHA <- min(1, A*RS[i]/sum(RS)/N0);
+        ALPHA <- min(1, A * RS[i] / sum(RS) / N0)
 
         cat(A, ALPHA, N0, RS[i], "\n");
 
