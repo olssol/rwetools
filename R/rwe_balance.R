@@ -195,7 +195,8 @@ rwe_bal_metric_ps <- function(covs, grp, ps,
         rst <- NULL
         for (i in seq_len(n_strata)) {
             cur_cov1 <- cov1[which(i == strata_1), ]
-            cur_cov0 <- cov0[which(i == strata_0), ]
+            cur_cov0 <- cov0[which(i == strata_0), , drop = FALSE]
+
             cur_grp  <- c(rep(1, nrow(cur_cov1)),
                           rep(0, nrow(cur_cov0)))
 

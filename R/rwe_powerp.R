@@ -85,10 +85,10 @@ rwePsPowDrawPost <- function(data, type = c("continuous", "binary"),
                       A     = A,
                       RS    = RS,
                       FIXVS = as.numeric(Fix.RS),
-                      N0    = stan.d[,"N0"],
-                      N1    = stan.d[,"N1"],
-                      YBAR0 = stan.d[,"YBAR0"],
-                      SD0   = stan.d[,"SD0"]);
+                      N0    = stan.d[, "N0"],
+                      N1    = stan.d[, "N1"],
+                      YBAR0 = stan.d[, "YBAR0"],
+                      SD0   = stan.d[, "SD0"]);
 
     ## sampling
     if ("continuous" == type) {
@@ -119,6 +119,7 @@ rwePsPowDrawPost <- function(data, type = c("continuous", "binary"),
             rst.theta     <- rstan::extract(rst.post, pars = "theta")$theta
             rst.theta.all <- rstan::extract(rst.post, pars = "thetas")$thetas
         } else {
+            rst.post  <- NULL
             rst.theta <- with(lst.data,
                               rbeta(2000,
                                     YSUM1 + A * YBAR0 + 1,
