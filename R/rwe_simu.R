@@ -175,13 +175,13 @@ rweSimuSingleArm <- function(nPat, muCov, sdCov, corCov, regCoeff, mix.phi = 1,
                              ...) {
 
     type  <- match.arg(type);
+    EY    <- NULL
     COV.X <- rweSimuCov(nPat       = nPat,
                         muCov      = muCov,
                         sdCov      = sdCov,
                         corCov     = corCov,
                         mix.phi    = mix.phi,
                         cov.breaks = cov.breaks)
-
     ##simulate Y
     if ("continuous" == type) {
         ## epsilon
@@ -196,9 +196,9 @@ rweSimuSingleArm <- function(nPat, muCov, sdCov, corCov, regCoeff, mix.phi = 1,
                                fmla       = fmla)[2];
         }
 
-        XBETA   <- rweXBeta(cov.x = COV.X, regCoeff = regCoeff, fmla = fmla);
-        EPSILON <- rweSimuError(nPat, ysig = ysig,...);
-        Y       <- XBETA + EPSILON;
+        EY      <- rweXBeta(cov.x = COV.X, regCoeff = regCoeff, fmla = fmla)
+        EPSILON <- rweSimuError(nPat, ysig = ysig,...)
+        Y       <- EY + EPSILON
     } else if ("binary" == type) {
         if (is.null(b0)) {
             stopifnot(!is.null(bin.mu));
@@ -213,13 +213,14 @@ rweSimuSingleArm <- function(nPat, muCov, sdCov, corCov, regCoeff, mix.phi = 1,
         }
         regCoeff <- c(b0, regCoeff);
         XBETA    <- rweXBeta(cov.x = COV.X, regCoeff = regCoeff, fmla = fmla);
-        Y        <- rbinom(nPat, 1, expit(XBETA));
+        EY       <- expit(XBETA)
+        Y        <- rbinom(nPat, 1, EY)
     }
 
     ##return
-    Data           <- cbind(1:nPat, Y, COV.X);
-    colnames(Data) <- c("pid", "Y", paste("V", 1:ncol(COV.X), sep=""));
-    data.frame(Data);
+    Data           <- cbind(1:nPat, Y, EY, COV.X);
+    colnames(Data) <- c("pid", "Y", "EY", paste("V", 1:ncol(COV.X), sep=""))
+    data.frame(Data)
 }
 
 #' Simulate continuous outcomes for a two arm study

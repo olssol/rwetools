@@ -43,10 +43,11 @@ rwePS <- function(data, ps.fml = NULL,
     data[["_grp_"]]    <- grp;
     data[["_arm_"]]    <- data[[v.arm]];
 
-
     ## stratification
     if (nstrata > 0) {
-        strata  <- rweCut(D1.ps, all.ps, breaks = nstrata, keep.inx = keep.inx);
+        strata  <- rweCut(D1.ps, all.ps,
+                          breaks = nstrata,
+                          keep.inx = keep.inx)
         data[["_strata_"]] <- strata;
     }
 
@@ -54,6 +55,7 @@ rwePS <- function(data, ps.fml = NULL,
     rst <- list(data    = data,
                 ps.fml  = ps.fml,
                 nstrata = nstrata);
+
     class(rst) <- get.rwe.class("DWITHPS");
 
     rst
@@ -187,10 +189,9 @@ rwePSDist <- function(data.withps, n.bins = 10, min.n0 = 10,
     stopifnot(inherits(data.withps,
                        what = get.rwe.class("DWITHPS")));
 
-    type <- match.arg(type);
-
-    dataps   <- data.withps$data;
-    nstrata  <- data.withps$nstrata;
+    type     <- match.arg(type)
+    dataps   <- data.withps$data
+    nstrata  <- data.withps$nstrata
     rst      <- NULL;
     for (i in 1:nstrata) {
 
@@ -204,8 +205,8 @@ rwePSDist <- function(data.withps, n.bins = 10, min.n0 = 10,
             inx.ps1 <- inx.ps1 & d1.arm == dataps[["_arm_"]];
         }
 
-        ps0 <- dataps[which(inx.ps0), "_ps_"];
-        ps1 <- dataps[which(inx.ps1), "_ps_"];
+        ps0 <- dataps[which(inx.ps0), "_ps_"]
+        ps1 <- dataps[which(inx.ps1), "_ps_"]
 
         if (0 == length(ps0) | 0 == length(ps1))
             warning("No samples in strata");
@@ -419,7 +420,7 @@ get_ps <- function(dta, ps.fml, type = c("logistic", "randomforest"),
     switch(type,
            logistic = {
                glm.fit <- glm(ps.fml, family=binomial, data=dta, ...);
-               est.ps <- glm.fit$fitted;
+               est.ps  <- glm.fit$fitted;
            },
            randomforest = {
                dta[[grp]] <- as.factor(dta[[grp]]);
@@ -427,5 +428,6 @@ get_ps <- function(dta, ps.fml, type = c("logistic", "randomforest"),
                                           ntree = ntree, ...);
                est.ps     <- predict(rf.fit, type = "prob")[,2];
            });
+
     est.ps
 }

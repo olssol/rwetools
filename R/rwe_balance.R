@@ -56,7 +56,6 @@ rweUnbalance <- function(nPat, ..., pts = NULL, covs = NULL, diff = TRUE,
     unb
 }
 
-
 #' Get unbalance after PS adjustment
 #'
 #' @param pts data frame of datasets
