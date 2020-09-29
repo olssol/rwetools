@@ -5,8 +5,8 @@
 #' @export
 #'
 rweSimuCov <- function(nPat, muCov, sdCov, corCov, mix.phi = 1,
-                       seed = NULL,
-                       cov.breaks = NULL) {
+                       cov.breaks = NULL,
+                       seed = NULL) {
 
     f.cur <- function(x, i) {
         if (is.array(x)) {
@@ -21,8 +21,10 @@ rweSimuCov <- function(nPat, muCov, sdCov, corCov, mix.phi = 1,
     stopifnot(is.numeric(mix.phi) | any(mix.phi < 0));
     stopifnot(nPat > 0);
 
-    if (!is.null(seed))
-        set.seed(seed);
+    if (!is.null(seed)) {
+        old_seed <- .Random.seed
+        set.seed(seed)
+    }
 
     n.pts <- rmultinom(1, nPat, mix.phi);
     cov.x <- NULL;
@@ -40,7 +42,10 @@ rweSimuCov <- function(nPat, muCov, sdCov, corCov, mix.phi = 1,
         cov.x   <- rbind(cov.x, cur.x);
     }
 
-    colnames(cov.x) <- paste("V", 1:ncol(cov.x), sep = "");
+    if (!is.null(seed))
+        .Random.seed <- old_seed
+
+    colnames(cov.x) <- paste("V", 1 : ncol(cov.x), sep = "");
     cov.x           <- data.frame(cov.x);
     cov.x           <- get_cov_cat(cov.x, cov.breaks);
 }
@@ -197,7 +202,7 @@ rweSimuSingleArm <- function(nPat, muCov, sdCov, corCov, regCoeff, mix.phi = 1,
         }
 
         EY      <- rweXBeta(cov.x = COV.X, regCoeff = regCoeff, fmla = fmla)
-        EPSILON <- rweSimuError(nPat, ysig = ysig,...)
+        EPSILON <- rweSimuError(nPat, ysig = ysig, ...)
         Y       <- EY + EPSILON
     } else if ("binary" == type) {
         if (is.null(b0)) {
@@ -219,7 +224,7 @@ rweSimuSingleArm <- function(nPat, muCov, sdCov, corCov, regCoeff, mix.phi = 1,
 
     ##return
     Data           <- cbind(1:nPat, Y, EY, COV.X);
-    colnames(Data) <- c("pid", "Y", "EY", paste("V", 1:ncol(COV.X), sep=""))
+    colnames(Data) <- c("pid", "Y", "EY", paste("V", 1 : ncol(COV.X), sep = ""))
     data.frame(Data)
 }
 
@@ -303,8 +308,10 @@ rweSimuFromTrial <- function(nPat, trial.data, group = "A", outcome = "Y",
                              permute = TRUE, f.subset = NULL,
                              permute.trteffect = 0, permute.interaction = 0,
                              simu.group = group, simu.outcome = outcome) {
-    if (!is.null(seed))
-        set.seed(seed);
+    if (!is.null(seed)) {
+        old_seed <- .Random.seed
+        set.seed(seed)
+    }
 
     if (1 == length(nPat)) {
         ## set the same sample size for the two groups
@@ -365,6 +372,9 @@ rweSimuFromTrial <- function(nPat, trial.data, group = "A", outcome = "Y",
         trt.effect <- permute.trteffect;
         simu.data  <- cur.smp;
     }
+
+    if (!is.null(seed))
+        .Random.seed <- old_seed
 
     ## randomize the order of simulated patients
     list(true.effect = trt.effect,
