@@ -11,6 +11,26 @@ void my_package_init(DllInfo *dll) {
   R_useDynamicSymbols(dll, TRUE);
 }
 
+// expit to get probability
+double g_ex(NumericVector beta, NumericVector x, double tol = 1e-6) {
+  double ex;
+  int k, n_beta = beta.size();
+
+  ex = 0;
+  for (k = 0; k < n_beta; k++) {
+    ex += beta[k] * x(k);
+  }
+  ex = 1 / (1 + std::exp(-ex));
+
+  if (ex < tol) {
+    ex = tol;
+  } else if (ex > 1 - tol) {
+    ex = 1 - tol;
+  }
+
+  return(ex);
+}
+
 
 //' Test Rcpp function
 //'
@@ -65,4 +85,194 @@ NumericVector cMatch(NumericVector target, NumericVector candidate, int ratio) {
 
   // return
   return(inx);
+}
+
+
+//' Get Moment Constraints
+//'
+//' return N row k column matrix
+//' Row:   subject
+//' Column: Moment
+//'
+//'
+// [[Rcpp::export]]
+NumericMatrix c_ps_gmm_g (NumericVector beta,
+                          NumericMatrix mat_grp_x,
+                          bool att = false) {
+  int n_pat  = mat_grp_x.nrow();
+  int n_beta = beta.size();
+
+  NumericMatrix rst(n_pat, 2 * n_beta - 1);
+  NumericVector curx;
+
+  int    i, j, k;
+  double ex, z, r;
+  double tilt, w;
+
+  for (i = 0; i < n_pat; i++) {
+    curx = mat_grp_x(i, _);
+
+    if (curx(0) <= 1.0) {
+      z = 1;
+    } else {
+      z = 0;
+    }
+
+    if (curx(0) <= 2.0) {
+      r = 1;
+    } else {
+      r = 0;
+    }
+
+    ex = g_ex(beta, curx[Range(1, n_beta + 1)]);
+
+    if (att) {
+      tilt = ex;
+    } else {
+      tilt = 1;
+    }
+
+    // set 1: grp 1 vs. grp 2:3
+    if (att) {
+      w =  z * ex * (1 - ex) - (1 - z) * ex * ex;
+    } else {
+      w =  z * (1 - ex) - (1 - z) * ex;
+    }
+
+    for (k = 0; k < n_beta; k++) {
+      rst(i, k) = w * curx(k + 1);
+    }
+
+    // set 2: grp 2 vs. grp 3 wrt X
+    w =  (1 - z) * r - (1 - z) * (1 - r);
+    if (att) {
+      w *=  ex / (1 - ex);
+    } else {
+      w /=  (1 - ex);
+    }
+
+    for (k = 1; k < n_beta; k++) {
+      rst(i, k + n_beta - 1) = w * curx(k + 1);
+    }
+
+    // set 2: grp 1 vs. grp 2
+    // w =  tilt * ex * (1 - ex);
+    // w *= z / ex - (1 - z) * r / (1 - ex);
+
+    // for (k = 0; k < n_beta; k++) {
+    //   rst(i, k + n_beta) = w * curx(k + 1);
+    // }
+
+    // set 3: grp 1 vs. grp 3
+    // w =  tilt * ex * (1 - ex);
+    // w *= z / ex - (1 - z) * (1 - r) / (1 - ex);
+
+    // for (k = 0; k < n_beta; k++) {
+    //   rst(i, k + 2 * n_beta) = w * curx(k + 1);
+    // }
+  }
+
+  // return
+  return(rst);
+}
+
+//' Get Derivative of Moment Constraints
+//'
+//' return k row p column matrix
+//' Row:    1..k moment functions
+//' Column: 1..p coefficients
+//'
+//'
+// [[Rcpp::export]]
+NumericMatrix c_ps_gmm_dg (NumericVector beta,
+                          NumericMatrix mat_grp_x,
+                          bool att = false) {
+  int n_pat  = mat_grp_x.nrow();
+  int n_beta = beta.size();
+  NumericMatrix rst(2 * n_beta - 1, n_beta);
+  NumericVector curx;
+
+  int i, j, k, l;
+  double ex, z, r;
+  double w;
+
+  for (i = 0; i < n_pat; i++) {
+
+    curx = mat_grp_x(i, _);
+
+    if (curx(0) <= 1.0) {
+      z = 1;
+    } else {
+      z = 0;
+    }
+
+    if (curx(0) <= 2.0) {
+      r = 1;
+    } else {
+      r = 0;
+    }
+
+    ex = g_ex(beta, curx[Range(1, n_beta + 1)]);
+
+    // set 1: grp 1 vs. grp 2:3
+    if (att) {
+      w = z * (1 - 2 * ex) - 2 * (1 - z) * ex;
+    } else {
+      w = - z - (1 - z);
+    }
+
+    for (k = 0; k < n_beta; k++) {
+      for (l = 0; l < n_beta; l++) {
+        rst(k, l) += w * ex * (1 - ex) * curx(k + 1) * curx(l + 1);
+      }
+    }
+
+    // set 2: grp 2 vs. grp 3 wrt X
+    w =  (1 - z) * r - (1 - z) * (1 - r);
+    // w * exp(xb)
+    w *= ex / (1 - ex);
+
+    for (k = 1; k < n_beta; k++) {
+      for (l = 0; l < n_beta; l++) {
+        rst(k + n_beta - 1, l) += w * curx(k + 1) * curx(l + 1);
+      }
+    }
+
+    // set 2: grp 1 vs. grp 2
+    // if (att) {
+    //   w = z * (1 - 2 * ex) - 2 * (1 - z) * r * ex;
+    // } else {
+    //   w = - z - (1 - z) * r;
+    // }
+
+    // for (k = 0; k < n_beta; k++) {
+    //   for (l = 0; l < n_beta; l++) {
+    //     rst(k + n_beta, l) += w * ex * (1 - ex) * curx(k + 1) * curx(l + 1);
+    //   }
+    // }
+
+    // set 3: grp 1 vs. grp 3
+    // if (att) {
+    //   w = z * (1 - 2 * ex) - 2 * (1 - z) * (1 - r) * ex;
+    // } else {
+    //   w = - z - (1 - z) * (1 - r);
+    // }
+
+    // for (k = 0; k < n_beta; k++) {
+    //   for (l = 0; l < n_beta; l++) {
+    //     rst(k + 2 * n_beta, l) +=
+    //       w * ex * (1 - ex) * curx(k + 1) * curx(l + 1);
+    //   }
+    // }
+  }
+
+  // take average
+  for (k = 0; k < rst.nrow(); k++) {
+    for (l = 0; l < rst.ncol(); l++) {
+      rst(k, l) /= n_pat;
+    }
+  }
+
+  // return
+  return(rst);
 }

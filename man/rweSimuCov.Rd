@@ -10,8 +10,8 @@ rweSimuCov(
   sdCov,
   corCov,
   mix.phi = 1,
-  seed = NULL,
-  cov.breaks = NULL
+  cov.breaks = NULL,
+  seed = NULL
 )
 }
 \arguments{

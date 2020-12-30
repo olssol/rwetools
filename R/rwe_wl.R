@@ -36,11 +36,15 @@ rwePsWl <- function(data, lambdas, v.outcome = "Y", m.var = c("jk", "bs"),
         ns0 <- length(cur.d0);
 
         if (0 == ns1) {
-            stop(paste("Stratum ", i, " contains no subjects from group 1", sep = ""));
+            stop(paste("Stratum ", i,
+                       " contains no subjects from group 1",
+                       sep = ""))
         }
 
         cur.lambda <- lambdas[i];
-        cur.theta  <- rweWL(cur.data = cur.d1, ext.data = cur.d0, lambda = cur.lambda, ...);
+        cur.theta  <- rweWL(cur.data = cur.d1,
+                            ext.data = cur.d0,
+                            lambda = cur.lambda, ...)
 
         ##bootstrap or jackknife
         var.theta  <- NULL;
@@ -78,9 +82,9 @@ rwePsWl <- function(data, lambdas, v.outcome = "Y", m.var = c("jk", "bs"),
 
     ##mwle
     ws       <- rst.theta[,1] / sum(rst.theta[,1]);
-    rst.mwle <- sum(ws * rst.theta[,2]);
+    rst.mwle <- sum(ws * rst.theta[, 2])
     ##rst.bs   <- apply(rst.theta[,-(1:2), drop = FALSE], 2, function(x) sum(ws*x));
-    rst.var  <- sum(ws^2 * rst.theta[,3]);
+    rst.var  <- sum(ws^2 * rst.theta[, 3])
 
     list(mwle        = rst.mwle,
          var         = rst.var,
@@ -242,7 +246,9 @@ rweGpsWl <- function(data, lambdas, v.outcome = "Y", ...) {
 #'
 #' @export
 #'
-rweWL <- function(cur.data, ext.data, lambda, type = c("continuous", "binary"), equal.sd = TRUE) {
+rweWL <- function(cur.data, ext.data, lambda,
+                  type = c("continuous", "binary"),
+                  equal.sd = TRUE) {
 
     f.ll <- function(pars) {
         theta  <- pars[1];
@@ -264,11 +270,14 @@ rweWL <- function(cur.data, ext.data, lambda, type = c("continuous", "binary"), 
 
         g <- numeric(length(pars));
         ## d logl / d theta
-        g[1] <- n1/sig2.1*(mean(cur.data) - theta) + lambda/sig2.0*(mean(ext.data) - theta);
+        g[1] <- n1/sig2.1*(mean(cur.data) - theta) +
+            lambda/sig2.0*(mean(ext.data) - theta)
         ## d logl / d sig2.1
-        g[2] <- - n1/2/sig2.1     + n1     * mean((cur.data - theta)^2)/2/sig2.1/sig2.1;
+        g[2] <- - n1/2/sig2.1 +
+            n1 * mean((cur.data - theta)^2)/2/sig2.1/sig2.1;
         ## d logl / d sig2.0
-        g[3] <- - lambda/2/sig2.0 + lambda * mean((cur.data - theta)^2)/2/sig2.0/sig2.0;
+        g[3] <- - lambda/2/sig2.0 +
+            lambda * mean((cur.data - theta)^2)/2/sig2.0/sig2.0;
 
         return(g)
     }
@@ -283,7 +292,8 @@ rweWL <- function(cur.data, ext.data, lambda, type = c("continuous", "binary"), 
         equal.sd <- TRUE;
     }
 
-    init.theta <- (n1/(n1 + lambda)) * mean(cur.data) + (lambda/(n1 + lambda)) * mean(ext.data);
+    init.theta <- (n1 / (n1 + lambda)) * mean(cur.data) +
+        (lambda/(n1 + lambda)) * mean(ext.data);
 
     if (("continuous" == type & equal.sd) | "binary" == type) {
         rst <- init.theta;
@@ -294,7 +304,7 @@ rweWL <- function(cur.data, ext.data, lambda, type = c("continuous", "binary"), 
                              method = "L-BFGS-B",
                              fn     = f.ll,
                              lower  = c(-Inf, 1e-6, 1e-6), upper = rep(Inf,3),
-                             control=list(fnscale=-1))$par[1];
+                             control= list(fnscale=-1))$par[1];
     }
 
     rst;

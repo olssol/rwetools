@@ -28,12 +28,12 @@ rwePS <- function(data, ps.fml = NULL,
 
     ## for 2-arm studies only
     if (!is.null(d1.arm))
-        d1.inx <- d1.inx & d1.arm == data[[v.arm]];
+        d1.inx <- d1.inx & d1.arm == data[[v.arm]]
 
     ## get ps
-    all.ps  <- get_ps(data, ps.fml = ps.fml, ...);
-    D1.ps   <- all.ps[which(d1.inx)];
-
+    all.ps  <- rwe_tk_ps(data, ps_fml = ps.fml, d1_grp = d1.grp,
+                         ...)
+    D1.ps   <- all.ps[which(d1.inx)]
 
     ## add columns to data
     grp     <- rep(1, nrow(data));
@@ -128,6 +128,7 @@ rweGPS <- function(data, ps.fml = NULL,
     ## design matrix
     if (is.null(ps.fml))
         ps.fml <- as.formula(paste(v.grp, "~", paste(v.covs, collapse = "+"), sep = ""))
+
     d_mat <- model.matrix(ps.fml, data)[, -1]
 
     ## mle
@@ -254,7 +255,8 @@ rwePSDist <- function(data.withps, n.bins = 10, min.n0 = 10,
 #'
 #' @export
 #'
-rweGpsDist <- function(data.gps, n.bins = 10, min.n0 = 10, type = c("ovl", "kl"),  ...) {
+rweGpsDist <- function(data.gps, n.bins = 10, min.n0 = 10,
+                       type = c("ovl", "kl"),  ...) {
 
     stopifnot(inherits(data.gps,
                        what = get.rwe.class("D_GPS")));
@@ -395,39 +397,130 @@ rwe_match_ps <- function(dta_cur, dta_ext, n_match = 3, ps.fml = NULL,
           match_id = rst)
 }
 
+#' Get Propensity Scores
+#'
+#' General function for estimating PS
+#'
+#'
+#' @export
+#'
+rwe_tk_ps <- function(dta, ps_fml = NULL, d1_grp = 1,
+                       type = c("logistic", "randomforest", "gmm"),
+                       ...,
+                       grp = NULL, ps_cov = NULL,
+                       ntree = 5000) {
+
+    type <- match.arg(type)
+
+    ## generate formula
+    if (is.null(ps_fml))
+        ps_fml <- as.formula(paste(grp, "~",
+                                   paste(ps_cov, collapse = "+"),
+                                   sep = ""))
+
+    ## identify grp if passed from formula
+    grp <- all.vars(ps_fml)[1];
+
+    ## fit model
+    switch(type,
+           logistic = {
+               ## d1_grp vs. all other groups
+               dta[[grp]] <- d1_grp == dta[[grp]]
+               glm_fit    <- glm(ps_fml, family = "binomial", data = dta, ...)
+               est_ps     <- glm_fit$fitted
+           },
+
+           randomforest = {
+               dta[[grp]] <- as.factor(dta[[grp]])
+               rf_fit     <- randomForest(ps_fml, data = dta,
+                                          ntree = ntree, ...);
+               est_ps     <- predict(rf_fit, type = "prob")[, 2]
+           },
+
+           gmm = {
+               gmm_fit <- rwe_gmm_ps(grp, ps_fml,
+                                     dta = dta,
+                                     d1_grp = d1_grp,
+                                     ...)
+               est_ps  <- gmm_fit$fitted
+           })
+
+    est_ps
+}
+
+#' Get Propensity Scores by GMM
+#'
+#' Estimating PS by GMM for three groups
+#'
+#'
+#' @export
+#'
+rwe_gmm_ps <- function(grp, ps_fml, dta, att = 0, d1_grp = 1,
+                       method  = "BFGS",
+                       crit    = 1e-10,
+                       itermax = 5000,
+                       control = list(reltol = 1e-10, maxit  = 20000),
+                       ...) {
+
+    f_mm <- function(beta, mat_grp_x) {
+        rst <- c_ps_gmm_g(beta, mat_grp_x, att = att)
+        rst
+    }
+
+    f_mm_d <- function(beta, mat_grp_x) {
+        rst <- c_ps_gmm_dg(beta, mat_grp_x, att = att)
+        rst
+    }
+
+    ## check and convert groups
+    d_grp <- dta[[grp]]
+    lvl_g <- sort(unique(d_grp))
+    stopifnot(3 == length(lvl_g))
+
+    lvl_g   <- c(d1_grp,
+                 lvl_g[-which(d1_grp == lvl_g)])
+
+    lst_inx <- list()
+    for (i in seq_len(length(lvl_g))) {
+        lst_inx[[i]] <- which(lvl_g[i] == d_grp)
+    }
+
+    for (i in seq_len(length(lst_inx))) {
+        d_grp[lst_inx[[i]]] <- i
+    }
+
+    ## x and grp
+    x         <- model.matrix(ps_fml, dta)
+    mat_grp_x <- cbind(d_grp, x)
+
+    ## get initial values
+    d_grp_01 <- d_grp
+    d_grp_01[which(1 != d_grp_01)] <- 0
+    dta[[grp]] <- d_grp_01
+    glm_fit    <- glm(ps_fml, family = "binomial", data = dta)
+
+    ## fit gmm
+    gmm_fit <- gmm::gmm(f_mm,
+                         mat_grp_x,
+                         gradv   = f_mm_d,
+                         t0      = coefficients(glm_fit),
+                         method  = method,
+                         crit    = crit,
+                         itermax = itermax,
+                         control = control,
+                         ...)
+
+    gmm_beta <- coefficients(gmm_fit)
+    xbeta    <- x %*% gmm_beta
+    exbeta   <- exp(xbeta)
+    ps       <- exbeta / (1 + exbeta)
+
+    list(fitted = ps,
+         beta   = gmm_beta)
+}
+
 ## -----------------------------------------------------------------------------
 ## -----------------------------------------------------------------------------
 ##             PRIVATE FUNCTIONS
 ## -----------------------------------------------------------------------------
 ## -----------------------------------------------------------------------------
-
-## compute propensity scores
-get_ps <- function(dta, ps.fml, type = c("logistic", "randomforest"),
-                   ntree = 5000,
-                   ..., grp = NULL, ps.cov = NULL) {
-
-    type <- match.arg(type);
-
-    ## generate formula
-    if (is.null(ps.fml))
-        ps.fml <- as.formula(paste(grp, "~", paste(ps.cov, collapse="+"),
-                                   sep=""));
-
-    ## identify grp if passed from formula
-    grp <- all.vars(ps.fml)[1];
-
-    ## fit model
-    switch(type,
-           logistic = {
-               glm.fit <- glm(ps.fml, family=binomial, data=dta, ...);
-               est.ps  <- glm.fit$fitted;
-           },
-           randomforest = {
-               dta[[grp]] <- as.factor(dta[[grp]]);
-               rf.fit     <- randomForest(ps.fml, data = dta,
-                                          ntree = ntree, ...);
-               est.ps     <- predict(rf.fit, type = "prob")[,2];
-           });
-
-    est.ps
-}

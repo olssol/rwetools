@@ -23,3 +23,25 @@ cMatch <- function(target, candidate, ratio) {
     .Call(`_rwetools_cMatch`, target, candidate, ratio)
 }
 
+#' Get Moment Constraints
+#'
+#' return N row k column matrix
+#' Row:   subject
+#' Column: Moment
+#'
+#'
+c_ps_gmm_g <- function(beta, mat_grp_x, att = FALSE) {
+    .Call(`_rwetools_c_ps_gmm_g`, beta, mat_grp_x, att)
+}
+
+#' Get Derivative of Moment Constraints
+#'
+#' return k row p column matrix
+#' Row:    1..k moment functions
+#' Column: 1..p coefficients
+#'
+#'
+c_ps_gmm_dg <- function(beta, mat_grp_x, att = FALSE) {
+    .Call(`_rwetools_c_ps_gmm_dg`, beta, mat_grp_x, att)
+}
+

@@ -24,6 +24,8 @@
 #'     rename_ filter
 #' @importFrom GA ga
 #'
+#' @importFrom gmm gmm
+#'
 #'
 #' @description
 #'

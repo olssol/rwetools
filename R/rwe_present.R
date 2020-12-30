@@ -14,7 +14,8 @@ rwePlotUnbalance <- function(data.unb,
 
     if (is.null(var.group)) {
         rst <- ggplot(data.unb, aes_string(x=var.x)) +
-            geom_density(alpha = 0.4, fill = "gray", na.rm = TRUE, adjust = adjust) +
+            geom_density(alpha = 0.4,
+                         fill = "gray", na.rm = TRUE, adjust = adjust) +
             geom_vline(xintercept = 0, linetype="dashed", col = "red");
     } else {
         rst <- ggplot(data.unb,
@@ -22,7 +23,8 @@ rwePlotUnbalance <- function(data.unb,
                                  group = var.group,
                                  color = var.group,
                                  linetype = var.group)) +
-            geom_density(alpha = 0.2, fill = "gray", na.rm = TRUE, adjust = adjust, );
+            geom_density(alpha = 0.2,
+                         fill = "gray", na.rm = TRUE, adjust = adjust, );
     }
 
     rst <- rst + labs(x = "", y="", title=title) +
@@ -194,9 +196,15 @@ plotRwePs <- function(data.withps, overall.inc = TRUE, add.text = TRUE,
 }
 
 plot.balance.fac <- function(dtaps, v, overall.inc = TRUE) {
-    cur.d <- rweFreqTbl(dtaps, var.groupby = c("Strata", "Group"), vars = v);
-    cur.d <- cur.d %>% dplyr::filter(!is.na(Strata));
+    cur.d <- rweFreqTbl(dtaps,
+                        var.groupby = c("Strata", "Group"),
+                        vars = v);
+
+    cur.d <- cur.d %>%
+        dplyr::filter(!is.na(Strata));
+
     cur.d$Strata <- paste("Stratum ", cur.d$Strata, sep = "")
+
     if (overall.inc) {
         cur.overall <- rweFreqTbl(dtaps, var.groupby = "Group", vars = v);
         cur.overall$Strata <- "Overall";
@@ -212,20 +220,21 @@ plot.balance.fac <- function(dtaps, v, overall.inc = TRUE) {
                  color = "black",
                  aes(group = Group,
                      fill  = Group)) +
-        scale_fill_manual(values=c("gray20", "gray80")) +
+        scale_fill_manual(values = c("gray20", "white", "gray50")) +
         scale_y_continuous(breaks = NULL, limits = c(0,1)) +
         labs(x = "", y = "") +
         facet_grid(Strata ~ .);
     rst
 }
 
-plot.balance.cont <- function(dtaps, v, nstrata, overall.inc = TRUE, facet.scales = "free_y") {
+plot.balance.cont <- function(dtaps, v, nstrata,
+                              overall.inc = TRUE, facet.scales = "free_y") {
     cur.d <- NULL;
     for (i in 1:nstrata) {
         cur.sub      <- dtaps[which(i == dtaps[["_strata_"]]),];
         cur.v        <- data.frame(Cov    = v,
                                    Value  = cur.sub[[v]],
-                                   Group  = cur.sub[["_grp_"]]);
+                                   Group  = cur.sub$Group);
         cur.v$Strata <- paste("Stratum ", i, sep = "");
         cur.d        <- rbind(cur.d, cur.v);
     }
@@ -234,7 +243,7 @@ plot.balance.cont <- function(dtaps, v, nstrata, overall.inc = TRUE, facet.scale
         cur.sub      <- dtaps;
         cur.v        <- data.frame(Cov    = v,
                                    Value  = cur.sub[[v]],
-                                   Group  = cur.sub[["_grp_"]]);
+                                   Group  = cur.sub$Group);
         cur.v$Strata <- paste("Overall");
         cur.d        <- rbind(cur.d, cur.v);
     }
@@ -247,7 +256,7 @@ plot.balance.cont <- function(dtaps, v, nstrata, overall.inc = TRUE, facet.scale
                          linetype = Group),
                      na.rm = TRUE) +
         scale_y_continuous(breaks = NULL) +
-        scale_fill_manual(values=c("gray20", "white")) +
+        scale_fill_manual(values = c("gray20", "white", "gray50")) +
         labs(x = "", y = "") +
         facet_grid(Strata ~ ., scales = facet.scales);
     rst
@@ -255,7 +264,10 @@ plot.balance.cont <- function(dtaps, v, nstrata, overall.inc = TRUE, facet.scale
 
 
 plotRweBalance <- function(data.withps, overall.inc = TRUE, v.cov = NULL,
-                           facet.scales = "free_y", label.cov = v.cov, legend.width = 0.08,
+                           by_grp = "_grp_",
+                           facet.scales = "free_y",
+                           label.cov = v.cov,
+                           legend.width = 0.08,
                            ...) {
 
     if (is.null(v.cov))
@@ -267,7 +279,7 @@ plotRweBalance <- function(data.withps, overall.inc = TRUE, v.cov = NULL,
     nstrata      <- data.withps$nstrata;
     dtaps        <- data.withps$data;
     dtaps$Strata <- dtaps[["_strata_"]];
-    dtaps$Group  <- dtaps[["_grp_"]];
+    dtaps$Group  <- dtaps[[by_grp]];
 
     rst <- list();
     for (v in v.cov) {
@@ -275,7 +287,8 @@ plotRweBalance <- function(data.withps, overall.inc = TRUE, v.cov = NULL,
             cur.p <- plot.balance.fac(dtaps, v, overall.inc = overall.inc);
         } else {
             cur.p <- plot.balance.cont(dtaps, v, nstrata = nstrata,
-                                       overall.inc = overall.inc, facet.scales = facet.scales);
+                                       overall.inc = overall.inc,
+                                       facet.scales = facet.scales);
         }
         cur.p <- cur.p +
             labs(title = label.cov[v == v.cov]) +
@@ -286,7 +299,7 @@ plotRweBalance <- function(data.withps, overall.inc = TRUE, v.cov = NULL,
                   panel.grid       = element_blank(),
                   panel.border     = element_blank(),
                   panel.spacing    = unit(0, "lines"),
-                  plot.title = element_text(hjust = 0.5),
+                  plot.title       = element_text(hjust = 0.5),
                   legend.position  = "none",
                   plot.margin      = unit(c(1,0,1,-0.5), "lines"));
 
@@ -294,7 +307,7 @@ plotRweBalance <- function(data.withps, overall.inc = TRUE, v.cov = NULL,
     }
 
     rst[[length(rst)]] <- rst[[length(rst)]] +
-      theme(strip.text = element_text(size=8),
+      theme(strip.text = element_text(size = 8),
             legend.position = "right")
 
     rst$nrow        <- 1;
