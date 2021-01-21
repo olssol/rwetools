@@ -102,12 +102,12 @@ NumericMatrix c_ps_gmm_g (NumericVector beta,
   int n_pat  = mat_grp_x.nrow();
   int n_beta = beta.size();
 
-  NumericMatrix rst(n_pat, 2 * n_beta - 1);
+  NumericMatrix rst(n_pat, 3 * n_beta - 2);
   NumericVector curx;
 
   int    i, j, k;
   double ex, z, r;
-  double tilt, w;
+  double w;
 
   for (i = 0; i < n_pat; i++) {
     curx = mat_grp_x(i, _);
@@ -126,12 +126,6 @@ NumericMatrix c_ps_gmm_g (NumericVector beta,
 
     ex = g_ex(beta, curx[Range(1, n_beta + 1)]);
 
-    if (att) {
-      tilt = ex;
-    } else {
-      tilt = 1;
-    }
-
     // set 1: grp 1 vs. grp 2:3
     if (att) {
       w =  z * ex * (1 - ex) - (1 - z) * ex * ex;
@@ -144,32 +138,35 @@ NumericMatrix c_ps_gmm_g (NumericVector beta,
     }
 
     // set 2: grp 2 vs. grp 3 wrt X
-    w =  (1 - z) * r - (1 - z) * (1 - r);
+    // w =  (1 - z) * r - (1 - z) * (1 - r);
+    // if (att) {
+    //   w *=  ex / (1 - ex);
+    // } else {
+    //   w /=  (1 - ex);
+    // }
+
+    // set 2: grp 1 vs. grp 2 wrt X
     if (att) {
-      w *=  ex / (1 - ex);
+      w =  z - (1 - z) * r * ex / (1 - ex);
     } else {
-      w /=  (1 - ex);
+      w =  z / ex - (1 - z) * r / (1 - ex);
     }
 
     for (k = 1; k < n_beta; k++) {
       rst(i, k + n_beta - 1) = w * curx(k + 1);
     }
 
-    // set 2: grp 1 vs. grp 2
-    // w =  tilt * ex * (1 - ex);
-    // w *= z / ex - (1 - z) * r / (1 - ex);
+    // set 3: grp 1 vs. grp 3 wrt X
+    if (att) {
+      w =  z - (1 - z) * (1 - r) * ex / (1 - ex);
+    } else {
+      w =  z / ex - (1 - z) * (1 - r) / (1 - ex);
+    }
 
-    // for (k = 0; k < n_beta; k++) {
-    //   rst(i, k + n_beta) = w * curx(k + 1);
-    // }
+    for (k = 1; k < n_beta; k++) {
+      rst(i, k + 2 * n_beta - 2) = w * curx(k + 1);
+    }
 
-    // set 3: grp 1 vs. grp 3
-    // w =  tilt * ex * (1 - ex);
-    // w *= z / ex - (1 - z) * (1 - r) / (1 - ex);
-
-    // for (k = 0; k < n_beta; k++) {
-    //   rst(i, k + 2 * n_beta) = w * curx(k + 1);
-    // }
   }
 
   // return

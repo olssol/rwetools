@@ -54,6 +54,8 @@ rwe_margin_sample <- function(target_stats, dta_ext,
 rwe_margin_simu <- function(target_stats, n = 500) {
     rst <- lapply(target_stats, private_margin_simu)
     rst <- data.frame(rst)
+
+    rst
 }
 
 #' Calculate log-likelihood based on summary statistics

@@ -501,14 +501,17 @@ rwe_gmm_ps <- function(grp, ps_fml, dta, att = 0, d1_grp = 1,
 
     ## fit gmm
     gmm_fit <- gmm::gmm(f_mm,
-                         mat_grp_x,
-                         gradv   = f_mm_d,
-                         t0      = coefficients(glm_fit),
-                         method  = method,
-                         crit    = crit,
-                         itermax = itermax,
-                         control = control,
-                         ...)
+                        mat_grp_x,
+                        gradv   = NULL, ## f_mm_d,
+                        t0      = coefficients(glm_fit),
+                        method  = method,
+                        crit    = crit,
+                        itermax = itermax,
+                        control = control,
+                        ...)
+
+    ## g values
+    ## print(apply(gmm_fit$gt, 2, mean))
 
     gmm_beta <- coefficients(gmm_fit)
     xbeta    <- x %*% gmm_beta
