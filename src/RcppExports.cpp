@@ -6,6 +6,19 @@
 
 using namespace Rcpp;
 
+// c_get_ps
+NumericVector c_get_ps(NumericVector beta, NumericMatrix mat_x, double tol);
+RcppExport SEXP _rwetools_c_get_ps(SEXP betaSEXP, SEXP mat_xSEXP, SEXP tolSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type beta(betaSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type mat_x(mat_xSEXP);
+    Rcpp::traits::input_parameter< double >::type tol(tolSEXP);
+    rcpp_result_gen = Rcpp::wrap(c_get_ps(beta, mat_x, tol));
+    return rcpp_result_gen;
+END_RCPP
+}
 // crtTest
 double crtTest(double test);
 RcppExport SEXP _rwetools_crtTest(SEXP testSEXP) {
@@ -43,6 +56,40 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// c_ps_gmm_gbar
+NumericVector c_ps_gmm_gbar(NumericVector beta, NumericMatrix mat_x, NumericVector ps, IntegerVector mgrp, NumericVector mz, NumericVector mr, NumericVector n3);
+RcppExport SEXP _rwetools_c_ps_gmm_gbar(SEXP betaSEXP, SEXP mat_xSEXP, SEXP psSEXP, SEXP mgrpSEXP, SEXP mzSEXP, SEXP mrSEXP, SEXP n3SEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type beta(betaSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type mat_x(mat_xSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type ps(psSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type mgrp(mgrpSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type mz(mzSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type mr(mrSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type n3(n3SEXP);
+    rcpp_result_gen = Rcpp::wrap(c_ps_gmm_gbar(beta, mat_x, ps, mgrp, mz, mr, n3));
+    return rcpp_result_gen;
+END_RCPP
+}
+// c_ps_gmm_sigma
+NumericMatrix c_ps_gmm_sigma(NumericVector beta, NumericMatrix mat_x, NumericVector ps, IntegerVector mgrp, NumericVector mz, NumericVector mr, NumericVector n3);
+RcppExport SEXP _rwetools_c_ps_gmm_sigma(SEXP betaSEXP, SEXP mat_xSEXP, SEXP psSEXP, SEXP mgrpSEXP, SEXP mzSEXP, SEXP mrSEXP, SEXP n3SEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type beta(betaSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type mat_x(mat_xSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type ps(psSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type mgrp(mgrpSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type mz(mzSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type mr(mrSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type n3(n3SEXP);
+    rcpp_result_gen = Rcpp::wrap(c_ps_gmm_sigma(beta, mat_x, ps, mgrp, mz, mr, n3));
+    return rcpp_result_gen;
+END_RCPP
+}
 // c_ps_gmm_dg
 NumericMatrix c_ps_gmm_dg(NumericVector beta, NumericMatrix mat_grp_x, bool att);
 RcppExport SEXP _rwetools_c_ps_gmm_dg(SEXP betaSEXP, SEXP mat_grp_xSEXP, SEXP attSEXP) {
@@ -58,9 +105,12 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_rwetools_c_get_ps", (DL_FUNC) &_rwetools_c_get_ps, 3},
     {"_rwetools_crtTest", (DL_FUNC) &_rwetools_crtTest, 1},
     {"_rwetools_cMatch", (DL_FUNC) &_rwetools_cMatch, 3},
     {"_rwetools_c_ps_gmm_g", (DL_FUNC) &_rwetools_c_ps_gmm_g, 3},
+    {"_rwetools_c_ps_gmm_gbar", (DL_FUNC) &_rwetools_c_ps_gmm_gbar, 7},
+    {"_rwetools_c_ps_gmm_sigma", (DL_FUNC) &_rwetools_c_ps_gmm_sigma, 7},
     {"_rwetools_c_ps_gmm_dg", (DL_FUNC) &_rwetools_c_ps_gmm_dg, 3},
     {NULL, NULL, 0}
 };

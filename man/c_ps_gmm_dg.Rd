@@ -7,5 +7,7 @@
 c_ps_gmm_dg(beta, mat_grp_x, att = FALSE)
 }
 \description{
-Get derivative of moment constraints
+return k row p column matrix
+Row:    1..k moment functions
+Column: 1..p coefficients
 }

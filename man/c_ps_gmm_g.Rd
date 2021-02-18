@@ -2,10 +2,12 @@
 % Please edit documentation in R/RcppExports.R
 \name{c_ps_gmm_g}
 \alias{c_ps_gmm_g}
-\title{Get Moment Constraints}
+\title{Get ALL Moment Constraints}
 \usage{
 c_ps_gmm_g(beta, mat_grp_x, att = FALSE)
 }
 \description{
-Get Moment Constraints
+return N row k column matrix
+Row:   subject
+Column: Moment
 }

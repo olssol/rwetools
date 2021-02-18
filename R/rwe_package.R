@@ -25,6 +25,7 @@
 #' @importFrom GA ga
 #'
 #' @importFrom gmm gmm
+#' @importFrom MASS ginv
 #'
 #'
 #' @description

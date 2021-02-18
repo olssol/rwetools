@@ -4,18 +4,7 @@
 \alias{rwe_gmm_ps}
 \title{Get Propensity Scores by GMM}
 \usage{
-rwe_gmm_ps(
-  grp,
-  ps_fml,
-  dta,
-  att = 0,
-  d1_grp = 1,
-  method = "BFGS",
-  crit = 1e-10,
-  itermax = 5000,
-  control = list(reltol = 1e-10, maxit = 20000),
-  ...
-)
+rwe_gmm_ps(grp, ps_fml, dta, d1_grp = 1, itermax = 5000, ...)
 }
 \description{
 Estimating PS by GMM for three groups

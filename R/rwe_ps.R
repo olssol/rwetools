@@ -455,12 +455,90 @@ rwe_tk_ps <- function(dta, ps_fml = NULL, d1_grp = 1,
 #'
 #' @export
 #'
-rwe_gmm_ps <- function(grp, ps_fml, dta, att = 0, d1_grp = 1,
-                       method  = "BFGS",
-                       crit    = 1e-10,
-                       itermax = 5000,
-                       control = list(reltol = 1e-10, maxit  = 20000),
-                       ...) {
+rwe_gmm_ps <- function(grp, ps_fml, dta, d1_grp = 1, itermax = 5000, ...) {
+
+    f_mm <- function(beta) {
+        ps    <- c_get_ps(beta, mat_x)
+        gbar  <- c_ps_gmm_gbar(beta, mat_x, ps, m_grp, m_z, m_r, n3)
+        sigma <- c_ps_gmm_sigma(beta, mat_x, ps, m_grp, m_z, m_r, n3)
+
+        ## gbar  <- gbar[1:7]
+        ## sigma <- sigma[1:7, 1:7]
+        invV  <- ginv(sigma)
+        loss  <- as.vector(t(gbar) %*% invV %*% (gbar))
+        list(gbar  = gbar,
+             sigma = sigma,
+             loss  = loss)
+    }
+
+    f_mm_loss <- function(beta) {
+        f_mm(beta)$loss
+    }
+
+    ## check and convert groups
+    d_grp <- dta[[grp]]
+    lvl_g <- sort(unique(d_grp))
+    stopifnot(3 == length(lvl_g))
+
+    lvl_g   <- c(d1_grp,
+                 lvl_g[-which(d1_grp == lvl_g)])
+
+    lst_inx <- list()
+    for (i in seq_len(length(lvl_g))) {
+        lst_inx[[i]] <- which(lvl_g[i] == d_grp)
+    }
+
+    for (i in seq_len(length(lst_inx))) {
+        d_grp[lst_inx[[i]]] <- i
+    }
+
+    ## x and grp
+    mat_x <- model.matrix(ps_fml, dta)
+    m_grp <- d_grp
+    m_z   <- 1 == d_grp
+    m_r   <- 2 == d_grp
+    m_r[1 == d_grp] <- -1
+    n3  <- c(sum(1 == d_grp), sum(2 == d_grp), sum(3 == d_grp))
+
+    ## get initial values
+    d_grp_01 <- d_grp
+    d_grp_01[which(1 != d_grp_01)] <- 0
+    dta[[grp]] <- d_grp_01
+    glm_fit    <- glm(ps_fml, family = "binomial", data = dta)
+
+    ## fit gmm
+    gmm_fit <- optim(coefficients(glm_fit) * 0,
+                     f_mm_loss,
+                     control = list("maxit" = itermax),
+                     method  = "BFGS",
+                     hessian = TRUE)
+
+    gmm_beta <- gmm_fit$par
+    gmm_rst  <- f_mm(gmm_beta)
+
+    ## return
+    list(fitted      = c_get_ps(gmm_beta, mat_x),
+         beta        = gmm_beta,
+         beta_glm    = coefficients(glm_fit),
+         gbar        = gmm_rst$gbar,
+         convergence = gmm_fit$convergence)
+}
+
+
+#' Get Propensity Scores by GMM
+#'
+#' Estimating PS by GMM for three groups
+#'
+#'
+#' @export
+#'
+rwe_gmm_ps_old <- function(grp, ps_fml, dta, att = 0, d1_grp = 1,
+                           method  = "BFGS",
+                           crit    = 1e-10,
+                           tol     = 1e-8,
+                           itermax = 5000,
+                           control = list(reltol = 1e-10, maxit  = 20000),
+                           ...) {
 
     f_mm <- function(beta, mat_grp_x) {
         rst <- c_ps_gmm_g(beta, mat_grp_x, att = att)
@@ -510,13 +588,22 @@ rwe_gmm_ps <- function(grp, ps_fml, dta, att = 0, d1_grp = 1,
                         control = control,
                         ...)
 
-    ## g values
-    ## print(apply(gmm_fit$gt, 2, mean))
+    ## gmm_fit <- gmm::gel(f_mm,
+    ##                     mat_grp_x,
+    ##                     tet0    = coefficients(glm_fit),
+    ##                     gradv   = NULL,
+    ##                     maxiterlam = 2000,
+    ##                     ...)
 
     gmm_beta <- coefficients(gmm_fit)
     xbeta    <- x %*% gmm_beta
     exbeta   <- exp(xbeta)
     ps       <- exbeta / (1 + exbeta)
+
+    ## g values
+    print(coefficients(glm_fit))
+    print(gmm_beta)
+    print(apply(gmm_fit$gt, 2, mean))
 
     list(fitted = ps,
          beta   = gmm_beta)

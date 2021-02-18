@@ -129,8 +129,8 @@ rwe_margin_entropy <- function(target_stats, dta_ext,
                                tol = 1e-8, max_it = 10000,
                                print_level = 0) {
 
-    line.searcher <- function (Base.weight, Co.x, Tr.total,
-                               coefs, Newton, ss) {
+    line.searcher <- function(Base.weight, Co.x, Tr.total,
+                              coefs, Newton, ss) {
         weights.temp <- c(exp(Co.x %*% (coefs - (ss * Newton))))
         weights.temp <- weights.temp * Base.weight
         Co.x.agg     <- c(weights.temp %*% Co.x)
