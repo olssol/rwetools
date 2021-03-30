@@ -142,3 +142,40 @@ tk_extract_stats <- function(x, quants = c(0.5), xlev = NULL,
 
     rst
 }
+
+
+#' Append list
+#'
+#' Append a list to another list.
+#'
+#'
+#' @export
+#'
+tk_append_list <- function(lst_old, lst_new) {
+    if (length(lst_new) > 0) {
+        li <- names(lst_new)
+        for (i in seq_len(length(lst_new))) {
+            lst_old[[li[i]]] <- lst_new[[i]]
+        }
+    }
+
+    lst_old
+}
+
+
+#' Get X^T times Beta
+#'
+#'
+#'
+#' @export
+#'
+tk_get_xbeta <- function(x, beta) {
+    x <- as.matrix(x)
+
+    if (length(beta) > 0 &
+        length(beta) != ncol(x)) {
+        stop("Number of coefficients does not match with the design matrix.")
+    }
+
+    x %*% beta
+}

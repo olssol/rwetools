@@ -47,7 +47,9 @@ rweSimuCov <- function(nPat, muCov, sdCov, corCov, mix.phi = 1,
 
     colnames(cov.x) <- paste("V", 1 : ncol(cov.x), sep = "");
     cov.x           <- data.frame(cov.x);
-    cov.x           <- get_cov_cat(cov.x, cov.breaks);
+    cov.x           <- get_cov_cat(cov.x, cov.breaks)
+
+    cov.x
 }
 
 #' Simulate X multiplied by Beta
@@ -61,7 +63,8 @@ rweSimuCov <- function(nPat, muCov, sdCov, corCov, mix.phi = 1,
 #'
 rweXBeta <- function(..., regCoeff, cov.x = NULL, fmla = NULL) {
 
-    stopifnot(inherits(fmla, "formula") | is.null(fmla));
+    stopifnot(inherits(fmla, "formula") |
+              is.null(fmla));
 
     if (is.null(cov.x))
         cov.x <- rweSimuCov(...);
@@ -71,8 +74,8 @@ rweXBeta <- function(..., regCoeff, cov.x = NULL, fmla = NULL) {
                               paste(colnames(cov.x), collapse = "+")));
     }
 
-    d.matrix <- model.matrix(fmla, cov.x);
-    xbeta    <- get.xbeta(d.matrix, regCoeff);
+    d.matrix <- model.matrix(fmla, cov.x)
+    xbeta    <- tk_get_xbeta(d.matrix, regCoeff)
     xbeta
 }
 
@@ -137,6 +140,107 @@ rweGetBinInt <- function(..., regCoeff, nPat=500000, xbeta = NULL,
     }
 
     rst
+}
+
+#' Get Intercept for Survival Outcome Simulation
+#'
+#' Get intercept such that the mean survival time at the given time point is the
+#' given survival probability
+#'
+#' @export
+#'
+rwe_get_surv_int <- function(covx, beta, xbeta = NULL,
+                             prob_surv = 0.5, t0 = 1,
+                             pred_tps = NULL) {
+
+    if (is.null(xbeta)) {
+        xbeta <- tk_get_xbeta(covx, beta)
+    }
+
+    fx <- function(b0, t0) {
+        mu     <- b0 + xbeta
+        lambda <- exp(mu)
+        p_surv <- exp(-lambda * t0)
+        mean(p_surv)
+    }
+
+    fy <- function(b0) {
+        p_surv <- fx(b0, t0)
+        (p_surv - prob_surv)^2
+    }
+
+    mey <- max(abs(xbeta))
+    rst <- optimize(fy, c(-50 - mey, 50 + mey))
+    ## print(rst)
+
+    b0        <- rst$minimum
+    pred_surv <- NULL
+    if (!is.null(pred_tps)) {
+        pred_surv <- sapply(pred_tps, function(x) fx(b0, x))
+    }
+
+    ## return
+    list(b0        = b0,
+         pred_surv = pred_surv)
+}
+
+#' Simulate survival outcomes
+#'
+#' Simulate survival outcomes based on exponential distribution
+#'
+#' @export
+#'
+rwe_simu_surv <- function(nPat,
+                          muCov, sdCov, corCov,
+                          b0, regCoeff, cov_breaks = NULL,
+                          muCov_cens, sdCov_cens, corCov_cens,
+                          b0_cens, regCoeff_cens, cov_breaks_cens = NULL,
+                          fmla_surv = NULL, fmla_cens = NULL,
+                          t_max = 5, ...) {
+
+    ## censoring
+    covx_cens <- rweSimuCov(nPat       = nPat,
+                            muCov      = muCov_cens,
+                            sdCov      = sdCov_cens,
+                            corCov     = corCov_cens,
+                            cov.breaks = cov_breaks_cens)
+
+    xbeta_cens <- rweXBeta(regCoeff = c(b0_cens, regCoeff_cens),
+                           cov.x    = covx_cens,
+                           fmla     = fmla_cens)
+
+    lambda_cens <- exp(xbeta_cens)
+    time_cens   <- rexp(n = nPat, lambda_cens)
+
+    ## event
+    covx_surv <- rweSimuCov(nPat       = nPat,
+                            muCov      = muCov,
+                            sdCov      = sdCov,
+                            corCov     = corCov,
+                            cov.breaks = cov_breaks)
+
+    xbeta_surv <- rweXBeta(regCoeff = c(b0, regCoeff),
+                           cov.x    = covx_surv,
+                           fmla     = fmla_surv)
+
+    lambda_surv <- exp(xbeta_surv)
+    time_surv   <- rexp(n = nPat, lambda_surv)
+
+    ## outcome
+    y <- apply(cbind(time_surv, time_cens, t_max),
+               1,
+               function(x) {
+                   c(x[1:2], x[1] > min(x), min(x))
+               })
+    y <- t(y)
+
+    ##return
+    Data           <- cbind(1:nPat, y, covx_cens, covx_surv);
+    colnames(Data) <- c("pid", "t_event", "t_censor", "censored", "time",
+                        paste("V",
+                              1:(ncol(covx_cens) + ncol(covx_surv)),
+                              sep = ""))
+    data.frame(Data)
 }
 
 #' Simulate random errors
