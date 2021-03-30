@@ -4,7 +4,14 @@
 \alias{rwe_get_surv_int}
 \title{Get Intercept for Survival Outcome Simulation}
 \usage{
-rwe_get_surv_int(covx, beta, xbeta = NULL, prob_surv = 0.5, t0 = 1)
+rwe_get_surv_int(
+  covx,
+  beta,
+  xbeta = NULL,
+  prob_surv = 0.5,
+  t0 = 1,
+  pred_tps = NULL
+)
 }
 \description{
 Get intercept such that the mean survival time at the given time point is the
