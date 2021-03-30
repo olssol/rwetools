@@ -1,6 +1,6 @@
 Package: rwetools
 Title: R functions for real-world data analysis
-Version: 6.5
+Version: 7.0
 Author: Chenguang Wang [aut, cre]
         Trustees of Columbia University [cph] (tools/make_cpp.R, R/stanmodels.R)
 Maintainer: Chenguang Wang <chenguang.wang.0517@gmail.com>
