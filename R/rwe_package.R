@@ -26,7 +26,7 @@
 #'
 #' @importFrom gmm gmm
 #' @importFrom MASS ginv
-#' @importFrom survival Surv
+#' @importFrom survival Surv survfit
 #'
 #' @description
 #'
