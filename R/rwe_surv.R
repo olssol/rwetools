@@ -70,30 +70,30 @@ rwe_ps_surv <- function(data,
         }
 
         cur_data    <- rbind(cur_d1, cur_d0)
-        cur_weights <- c(rep(1, ns1), rep(lambdas[i], ns0))
+        cur_weights <- c(rep(1, ns1), rep(lambdas[i] / ns0, ns0))
         cur_est     <- f_surv(cur_data, cur_weights)
 
         cur_jk  <- NULL;
         ##jackknife
         if ("jk" == m_var) {
-            cur_weights <- c(rep(1, ns1 - 1), rep(lambdas[i], ns0))
+            cur_weights <- c(rep(1, ns1 - 1), rep(lambdas[i] / ns0, ns0))
             for (j in 1:ns1) {
                 cur_data  <- rbind(cur_d1[-j, ], cur_d0)
                 jk_est    <- f_surv(cur_data, cur_weights)
-                cur_jk    <- rbind(cur_jk, jk_est)
+                cur_jk    <- rbind(cur_jk, (jk_est - cur_est)^2)
             }
 
             if (ns0 > 0 & lambdas[i] > 0) {
-                cur_weights <- c(rep(1, ns1), rep(lambdas[i], ns0 - 1))
+                cur_weights <- c(rep(1, ns1), rep(lambdas[i] / ns0, ns0 - 1))
                 for (j in 1:ns0) {
                     cur_data <- rbind(cur_d1, cur_d0[-j, ])
                     jk_est   <- f_surv(cur_data, cur_weights)
-                    cur_jk   <- rbind(cur_jk, jk_est)
+                    cur_jk   <- rbind(cur_jk, (jk_est - cur_est)^2)
                 }
             }
         }
         cur_n      <- nrow(cur_jk)
-        cur_jk_var <- apply(cur_jk, 2, function(x) {var(x) * (cur_n - 1)^2 / cur_n})
+        cur_jk_var <- apply(cur_jk, 2, sum) * (ns1 + ns0 - ) / (ns1 + ns0)
         rst_est    <- rbind(rst_est, c(ns1, ns0, cur_est, cur_jk_var))
     }
 
