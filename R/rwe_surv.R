@@ -93,7 +93,7 @@ rwe_ps_surv <- function(data,
             }
         }
         cur_n      <- nrow(cur_jk)
-        cur_jk_var <- apply(cur_jk, 2, sum) * (ns1 + ns0 - ) / (ns1 + ns0)
+        cur_jk_var <- apply(cur_jk, 2, sum) * (ns1 + ns0 - 1) / (ns1 + ns0)
         rst_est    <- rbind(rst_est, c(ns1, ns0, cur_est, cur_jk_var))
     }
 
