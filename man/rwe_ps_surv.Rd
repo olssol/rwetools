@@ -9,8 +9,9 @@ rwe_ps_surv(
   lambdas,
   v_censored = "censored",
   v_event = "time",
-  m_var = c("jk"),
+  m_var = c("jk", "bs"),
   pred_tps = 1,
+  nbs = 200,
   seed = NULL,
   ...
 )

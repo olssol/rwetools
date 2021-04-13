@@ -226,6 +226,7 @@ rwe_simu_surv <- function(nPat,
     lambda_surv <- exp(xbeta_surv)
     time_surv   <- rexp(n = nPat, lambda_surv)
 
+
     ## outcome
     y <- apply(cbind(time_surv, time_cens, t_max),
                1,
@@ -235,8 +236,11 @@ rwe_simu_surv <- function(nPat,
     y <- t(y)
 
     ##return
-    Data           <- cbind(1:nPat, y, covx_cens, covx_surv);
-    colnames(Data) <- c("pid", "t_event", "t_censor", "censored", "time",
+    Data           <- cbind(1:nPat, y, lambda_surv, lambda_cens,
+                            covx_cens, covx_surv)
+    colnames(Data) <- c("pid",
+                        "t_event", "t_censor", "censored", "time",
+                        "lambda_surv", "lambda_cens",
                         paste("V",
                               1:(ncol(covx_cens) + ncol(covx_surv)),
                               sep = ""))
